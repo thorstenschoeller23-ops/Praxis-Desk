@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PraxisDesk – Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   PraxisDesk v3 – Design-Token gemäß APPWERK-Spezifikation
+   ============================================================ */
+:root{
+  --grund:#FDFDFF; --flaeche:#FFFFFF; --getoent:#F1F4FE; --linie:#DFE4F2;
+  --text:#0B1020; --text2:#3D4560;
+  --kobalt:#2B3FE4; --violett:#7C3AED;
+  --verlauf:linear-gradient(120deg,#2B3FE4,#7C3AED);
+  --warn:#E8401C; --warn-bg:#FFE9E2;
+  --arbeit:#9A6A00; --arbeit-bg:#FFF3D6;
+  --fertig:#0B7A4F; --fertig-bg:#DCF5E9;
+  --radius:18px;
+  --schatten:0 6px 24px rgba(11,16,32,.07);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--grund);color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:16px}
+h1,h2,h3,h4{font-family:'Archivo',sans-serif}
+.mono{font-family:'JetBrains Mono',monospace}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,select,textarea{font-family:inherit;font-size:15px;padding:9px 12px;border:1px solid var(--linie);border-radius:10px;background:var(--flaeche);color:var(--text);width:100%}
+textarea{min-height:90px;resize:vertical}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--kobalt);outline-offset:1px}
+label{display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:5px}
+.feld{margin-bottom:13px}
+
+/* ---------- Kopfzeile ---------- */
+.demo-hinweis{background:var(--getoent);border-bottom:1px solid var(--linie);text-align:center;padding:6px 12px;font-size:13px;color:var(--text2)}
+header{display:flex;align-items:center;gap:12px;padding:14px 22px;background:var(--flaeche);border-bottom:1px solid var(--linie);position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.logo{font-family:'Archivo';font-weight:800;font-size:20px;background:var(--verlauf);-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
+.uhr{font-family:'JetBrains Mono';font-size:15px;color:var(--text2);white-space:nowrap}
+nav{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+nav .tab{padding:9px 14px;border-radius:12px;font-weight:600;font-size:14px;color:var(--text2);border:1px solid transparent}
+nav .tab:hover{background:var(--getoent)}
+nav .tab.aktiv{background:var(--verlauf);color:#fff}
+.wer{font-size:13px;color:var(--text2);white-space:nowrap}
+.hilfe-btn{width:40px;height:40px;border-radius:50%;background:var(--verlauf);color:#fff;font-family:'Archivo';font-weight:800;font-size:19px;box-shadow:var(--schatten);flex-shrink:0}
+.hilfe-btn:hover{transform:scale(1.06)}
+
+/* ---------- Layout / Karten ---------- */
+main{max-width:1240px;margin:0 auto;padding:22px}
+.karte{background:var(--flaeche);border:1px solid var(--linie);border-radius:var(--radius);box-shadow:var(--schatten);padding:18px;animation:gleiten .35s ease}
+@keyframes gleiten{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes puls{0%{box-shadow:0 0 0 0 rgba(43,63,228,.35)}100%{box-shadow:0 0 0 14px rgba(43,63,228,0)}}
+.puls{animation:puls .8s ease-out 2}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+.raster{display:grid;gap:16px}
+.raster-2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.raster-3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.raster-4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--text2);font-weight:600;margin-bottom:4px}
+.leer{padding:26px;text-align:center;color:var(--text2);background:var(--getoent);border-radius:14px;font-size:15px}
+
+/* ---------- Status-Chips & Ampel ---------- */
+.chip{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.chip.geplant{background:var(--getoent);color:var(--text2)}
+.chip.anwesend{background:#E4E9FF;color:var(--kobalt)}
+.chip.inBehandlung{background:var(--arbeit-bg);color:var(--arbeit)}
+.chip.abgeschlossen{background:var(--fertig-bg);color:var(--fertig)}
+.chip.nichtErschienen{background:var(--warn-bg);color:var(--warn)}
+.chip.dringend{background:var(--warn);color:#fff}
+.chip.offen{background:var(--warn-bg);color:var(--warn)}
+.chip.inBearbeitung{background:var(--arbeit-bg);color:var(--arbeit)}
+.chip.erledigt{background:var(--fertig-bg);color:var(--fertig)}
+.chip.rolle{background:var(--getoent);color:var(--kobalt)}
+.ampel{width:12px;height:12px;border-radius:50%;display:inline-block;flex-shrink:0}
+.ampel.gruen{background:#0B7A4F}.ampel.gelb{background:#D99A00}.ampel.rot{background:#E8401C;animation:puls 1.4s infinite}
+
+/* ---------- Knöpfe ---------- */
+.btn{padding:10px 18px;border-radius:12px;font-weight:600;font-size:14px;border:1px solid var(--linie);background:var(--flaeche);color:var(--text)}
+.btn:hover{background:var(--getoent)}
+.btn.primaer{background:var(--verlauf);color:#fff;border:none}
+.btn.primaer:hover{filter:brightness(1.08)}
+.btn.gefahr{color:var(--warn);border-color:#FFD2C6}
+.btn.gefahr:hover{background:var(--warn-bg)}
+.btn.klein{padding:6px 12px;font-size:13px}
+
+/* ---------- Zeilen ---------- */
+.zeile{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;border:1px solid transparent;flex-wrap:wrap}
+.zeile:hover{background:var(--getoent);border-color:var(--linie)}
+.zeile .zeit{font-family:'JetBrains Mono';font-size:14px;color:var(--text2);width:52px;flex-shrink:0}
+.zeile .name{font-weight:600;flex:1;min-width:120px}
+.zeile .meta{font-size:13px;color:var(--text2)}
+.klickbar{cursor:pointer}
+
+/* ---------- Login ---------- */
+.login{max-width:420px;margin:7vh auto;padding:34px}
+.login h1{text-align:center;margin-bottom:4px}
+.login .sub{text-align:center;color:var(--text2);margin-bottom:20px}
+.login .demo-konten{margin-top:18px;background:var(--getoent);border-radius:14px;padding:12px 14px;font-size:13px;color:var(--text2)}
+.login .demo-konten b{font-family:'JetBrains Mono';font-weight:500;color:var(--text)}
+.fehltext{color:var(--warn);font-weight:600;min-height:22px;font-size:15px}
+
+/* ---------- Kiosk ---------- */
+.kiosk{max-width:680px;margin:0 auto;text-align:center}
+.kiosk h1{font-size:clamp(26px,5vw,38px);margin:14px 0 6px}
+.kiosk p.sub{color:var(--text2);font-size:18px;margin-bottom:22px}
+.kiosk-taste{display:block;width:100%;padding:20px 22px;margin-bottom:12px;border-radius:var(--radius);background:var(--flaeche);border:1px solid var(--linie);box-shadow:var(--schatten);font-size:21px;font-weight:600;text-align:left}
+.kiosk-taste:hover{border-color:var(--kobalt);background:var(--getoent)}
+.kiosk-taste .kt-zeit{font-family:'JetBrains Mono';font-size:16px;color:var(--text2);float:right}
+.kiosk-taste.gesperrt{opacity:.55;cursor:not-allowed}
+.kiosk-gross{padding:24px;font-size:22px;border-radius:var(--radius);width:100%;margin-top:12px}
+.willkommen{padding:50px 26px}
+.willkommen .haken{font-size:64px}
+.ziffernblock{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:320px;margin:18px auto}
+.ziffer{padding:18px;font-size:24px;font-family:'JetBrains Mono';border:1px solid var(--linie);border-radius:14px;background:var(--flaeche);box-shadow:var(--schatten)}
+.ziffer:hover{background:var(--getoent)}
+.geb-anzeige{font-family:'JetBrains Mono';font-size:30px;letter-spacing:3px;padding:14px;background:var(--getoent);border-radius:14px;margin:10px auto;max-width:320px;min-height:62px}
+
+/* ---------- Öffentliche Anzeige ---------- */
+.anzeige{background:var(--text);border-radius:var(--radius);padding:34px;color:#fff;min-height:60vh}
+.anzeige h2{color:#fff;font-size:clamp(24px,4vw,34px);margin-bottom:22px}
+.aufruf{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.07);border-radius:16px;padding:20px 26px;margin-bottom:14px;font-family:'JetBrains Mono';font-size:clamp(20px,3.4vw,30px)}
+.aufruf .pfeil{color:#8FA0FF;margin:0 18px}
+.aufruf.neu{background:var(--verlauf)}
+.anzeige .fuss{color:#9AA3C0;font-size:15px;margin-top:24px;font-family:'Instrument Sans'}
+
+/* ---------- Modal ---------- */
+.modal-hg{position:fixed;inset:0;background:rgba(11,16,32,.45);display:flex;align-items:center;justify-content:center;z-index:100;padding:18px}
+.modal{background:var(--flaeche);border-radius:var(--radius);max-width:640px;width:100%;max-height:88vh;overflow:auto;padding:26px;box-shadow:0 20px 60px rgba(11,16,32,.25);animation:gleiten .25s ease}
+.modal h2{margin-bottom:16px}
+.modal .fuss-knoepfe{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+.hilfe-abschnitt{margin-bottom:18px}
+.hilfe-abschnitt h3{margin-bottom:6px;font-size:16px}
+.hilfe-abschnitt p{color:var(--text2);font-size:14.5px;line-height:1.55}
+.haeckchen{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;font-size:14.5px}
+.haeckchen:hover{background:var(--getoent)}
+.haeckchen input{width:auto}
+
+/* ---------- Kennzahlen / Titel ---------- */
+.kpi{text-align:center}
+.kpi .wert{font-family:'JetBrains Mono';font-weight:600;font-size:30px;background:var(--verlauf);-webkit-background-clip:text;background-clip:text;color:transparent}
+.kpi .label{font-size:13px;color:var(--text2);margin-top:4px}
+.abschnitt-titel{display:flex;align-items:center;justify-content:space-between;margin:26px 0 12px;flex-wrap:wrap;gap:10px}
+.abschnitt-titel:first-child{margin-top:0}
+.raum-kopf{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.raum-kopf h3{flex:1}
+.frei-ab{font-family:'JetBrains Mono';font-size:13px;color:var(--text2)}
+.log-eintrag{font-size:13.5px;color:var(--text2);padding:7px 4px;border-bottom:1px dashed var(--linie)}
+.log-eintrag .lz{font-family:'JetBrains Mono';margin-right:8px;color:var(--kobalt)}
+footer{text-align:center;color:var(--text2);font-size:13px;padding:26px}
+@media (max-width:640px){ main{padding:14px} header{padding:12px 14px} nav .tab{padding:8px 10px;font-size:13px} }
+</style>
+</head>
+<body>
+
+<div class="demo-hinweis">Demo-Modus – alle Daten sind Beispieldaten</div>
+
+<header>
+  <div class="logo" id="praxisName">PraxisDesk</div>
+  <div class="uhr mono" id="uhr">–:–</div>
+  <nav id="hauptNav"></nav>
+  <span id="kopfAktionen" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"></span>
+  <button class="hilfe-btn" onclick="oeffneHilfe()" title="Alles erklärt – so funktioniert PraxisDesk">?</button>
+</header>
+
+<main id="app"></main>
+<footer>PraxisDesk · Prototyp nach APPWERK-Spezifikation · Konten & Rollen bestimmen, wer was sieht</footer>
+<div id="modalWurzel"></div>
+
+<script>
+/* ============================================================
+   PraxisDesk v3 – Prototyp (eine Datei, kein Server)
+   Neu: Anmeldung mit Benutzername + Passwort wie im Referenz-
+   projekt. Je nach Konto/Rolle sind nur bestimmte Bereiche
+   sichtbar (z. B. sieht das Check-in-Tablet NUR den Check-in).
+   Die Leitung verwaltet Konten, legt eigene Rollen mit frei
+   wählbaren Bereichen an und kann alles selbst einstellen.
+   ============================================================ */
+
+/* ---------- Zeit-Helfer ---------- */
+const START = new Date();
+function jetzt(){ return new Date(); }
+function minAb(off){ const d=new Date(START); d.setMinutes(d.getMinutes()+off); return d; }
+function hhmm(d){ return d ? d.toTimeString().slice(0,5) : '–'; }
+function minutenDiff(a,b){ return Math.round((a-b)/60000); }
+function initialen(name){ const t=name.trim().split(/\s+/); return t.length>1?(t[0][0]+'. '+t[t.length-1][0]+'.'):(t[0][0]+'.'); }
+function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function neuId(p){ return p+Math.random().toString(36).slice(2,8); }
+
+/* ============================================================
+   FUNKTIONSBEREICHE & ROLLEN (wie im Referenzprojekt)
+   ============================================================ */
+const FEATURES=[
+  {id:'checkin',     label:'Check-in (Kiosk)'},
+  {id:'anzeige',     label:'Wartebereich-Anzeige'},
+  {id:'raum',        label:'Raum-Display'},
+  {id:'empfang',     label:'Empfang & Termine'},
+  {id:'beschwerden', label:'Beschwerden & Feedback'},
+  {id:'auswertung',  label:'Auswertungen'},
+  {id:'datenschutz', label:'Datenschutz & Log'},
+  {id:'verwaltung',  label:'Verwaltung (Konten, Rollen, Einstellungen)'},
+];
+const FEATURE_TAB={checkin:'Check-in', anzeige:'Wartebereich', raum:'Raum', empfang:'Empfang',
+  beschwerden:'Beschwerden', auswertung:'Auswertung', datenschutz:'Datenschutz', verwaltung:'Verwaltung'};
+
+/* Eingebaute Standard-Rollen – greifen, solange keine eigene Rolle gewählt ist */
+const BUILTIN_ROLES={
+  leitung:  {name:'Leitung (alles)', perms:FEATURES.map(f=>f.id)},
+  empfang:  {name:'Empfang',         perms:['checkin','anzeige','empfang','beschwerden','auswertung']},
+  behandler:{name:'Behandler (Raum)',perms:['raum']},
+  kiosk:    {name:'Kiosk-Gerät',     perms:['checkin']},
+  anzeige:  {name:'Anzeige-Gerät',   perms:['anzeige']},
+};
+/* Berechtigungen eines Benutzers: Chef sieht alles, sonst eigene Rolle ODER Standardrolle */
+function permsForUser(u){
+  if(!u) return [];
+  if(u.chef) return FEATURES.map(f=>f.id);
+  if(u.roleId){ const r=state.rollen.find(x=>x.id===u.roleId); if(r) return r.perms||[]; }
+  const b=BUILTIN_ROLES[u.role]; return b?b.perms:[];
+}
+function darf(feature){ return permsForUser(state.aktuellerBenutzer).includes(feature); }
+function rollenName(u){
+  if(u.chef) return 'Leitung (Chef)';
+  if(u.roleId){ const r=state.rollen.find(x=>x.id===u.roleId); if(r) return r.name; }
+  return BUILTIN_ROLES[u.role]?BUILTIN_ROLES[u.role].name:'–';
+}
+
+/* ---------- Zustand ---------- */
+let idZaehler=100, fbZaehler=0;
+const state = {
+  praxisName:'PraxisDesk',
+  anzeigeModus:'initialen',
+  anzeigeAktiv:true,
+  sichtschutz:false,
+  ansicht:null,
+  aktuellerBenutzer:null,
+  benutzer:[
+    // Demo-Konten (im Echtbetrieb: sichere Authentifizierung, Passwörter verschlüsselt)
+    {id:'u1', u:'leitung', p:'chef123',    name:'Praxisleitung',      chef:true,  role:'leitung',   roleId:null, festerRaum:null},
+    {id:'u2', u:'empfang', p:'empfang123', name:'A. Schmidt',         chef:false, role:'empfang',   roleId:null, festerRaum:null},
+    {id:'u3', u:'raum1',   p:'raum123',    name:'L. Krüger',          chef:false, role:'behandler', roleId:null, festerRaum:'r1'},
+    {id:'u4', u:'kiosk',   p:'kiosk123',   name:'Check-in-Tablet',    chef:false, role:'kiosk',     roleId:null, festerRaum:null},
+    {id:'u5', u:'anzeige', p:'anzeige123', name:'Wartebereich-Display',chef:false,role:'anzeige',   roleId:null, festerRaum:null},
+  ],
+  rollen:[],            // eigene, frei definierte Rollen {id,name,perms[]}
+  kioskSchritt:{modus:'start'},
+  aktiverRaum:'r1',
+  raeume:[
+    {id:'r1', name:'Raum 1 · Behandlung'},
+    {id:'r2', name:'Raum 2 · Behandlung'},
+    {id:'r3', name:'Raum 3 · Training'},
+    {id:'r4', name:'Raum 4 · Massage'},
+    {id:'r5', name:'Raum 5 · Behandlung'},
+  ],
+  behandler:[
+    {id:'b1', name:'L. Krüger', raumHeute:'r1'},
+    {id:'b2', name:'M. Sato',   raumHeute:'r2'},
+    {id:'b3', name:'A. Weber',  raumHeute:'r3'},
+    {id:'b4', name:'T. Öztürk', raumHeute:'r4'},
+  ],
+  termine:[], aufrufe:[], feedback:[], log:[],
+};
+
+/* ---------- Demo-Daten ---------- */
+function neuerTermin(o){
+  idZaehler++;
+  return { id:'t'+idZaehler, nummer:'A'+String(idZaehler-100).padStart(2,'0'),
+    patient:{name:o.name, initialen:initialen(o.name), geburtsdatum:o.geb},
+    behandlerId:o.beh, raumId:o.raum, zeit:minAb(o.off), dauer:o.dauer,
+    behandlungsart:o.art, status:o.status, dringend:!!o.dringend,
+    checkinZeit:o.ci!=null?minAb(o.ci):null, aufrufZeit:o.auf!=null?minAb(o.auf):null,
+    kioskVersuche:0, kioskGesperrt:false, anonymisiert:false };
+}
+function demoDatenLaden(){
+  const T=[
+    {name:'Hannelore Brandt', geb:'12.03.1954', beh:'b1', raum:'r1', off:-120, dauer:30, art:'Krankengymnastik', status:'abgeschlossen', ci:-125, auf:-120},
+    {name:'Jonas Ehlers',     geb:'30.07.1991', beh:'b1', raum:'r1', off:-85,  dauer:30, art:'Manuelle Therapie', status:'abgeschlossen', ci:-92, auf:-85},
+    {name:'Miriam Falk',      geb:'22.11.1987', beh:'b1', raum:'r1', off:-25,  dauer:30, art:'Krankengymnastik', status:'inBehandlung', ci:-33, auf:-25},
+    {name:'Peter Grimm',      geb:'05.01.1963', beh:'b1', raum:'r1', off:10,   dauer:30, art:'Manuelle Therapie', status:'anwesend', ci:-6},
+    {name:'Sofia Marino',     geb:'17.09.1979', beh:'b1', raum:'r1', off:45,   dauer:30, art:'Krankengymnastik', status:'geplant'},
+    {name:'Karlheinz Duda',   geb:'02.02.1949', beh:'b2', raum:'r2', off:-110, dauer:40, art:'Lymphdrainage', status:'abgeschlossen', ci:-118, auf:-110},
+    {name:'Renate Vogel',     geb:'14.06.1958', beh:'b2', raum:'r2', off:-60,  dauer:30, art:'Krankengymnastik', status:'inBehandlung', ci:-70, auf:-60},
+    {name:'Ludwig Albers',    geb:'09.10.1972', beh:'b2', raum:'r2', off:-15,  dauer:30, art:'Manuelle Therapie', status:'anwesend', ci:-22},
+    {name:'Emre Yildiz',      geb:'28.04.1995', beh:'b2', raum:'r2', off:30,   dauer:30, art:'Krankengymnastik', status:'geplant'},
+    {name:'Clara Neumann',    geb:'19.12.1983', beh:'b3', raum:'r3', off:-50,  dauer:45, art:'Gerätetraining', status:'abgeschlossen', ci:-55, auf:-50},
+    {name:'David Otte',       geb:'03.05.1968', beh:'b3', raum:'r3', off:5,    dauer:45, art:'Gerätetraining', status:'anwesend', ci:-11},
+    {name:'Frieda Lorenz',    geb:'25.08.2001', beh:'b3', raum:'r3', off:60,   dauer:30, art:'Krankengymnastik', status:'geplant'},
+    {name:'Georg Steiner',    geb:'07.07.1975', beh:'b4', raum:'r4', off:-18,  dauer:30, art:'Massage', status:'inBehandlung', ci:-26, auf:-18},
+    {name:'Ines Pohl',        geb:'11.02.1990', beh:'b4', raum:'r4', off:20,   dauer:30, art:'Massage', status:'geplant'},
+    {name:'Notfall (H. Wagner)', geb:'01.01.1980', beh:'b2', raum:'r2', off:-5, dauer:20, art:'Akutbehandlung', status:'anwesend', ci:-5, dringend:true},
+  ];
+  state.termine=T.map(neuerTermin);
+  state.termine.filter(t=>t.aufrufZeit).sort((a,b)=>a.aufrufZeit-b.aufrufZeit)
+    .forEach(t=>state.aufrufe.push({terminId:t.id, zeit:t.aufrufZeit}));
+  state.feedback=[
+    {id:'f'+(++fbZaehler), zeit:minAb(-95), typ:'Beschwerde', text:'Die Wartezeit war letzte Woche über 40 Minuten, ohne dass jemand Bescheid gesagt hat.', name:'', status:'inBearbeitung'},
+    {id:'f'+(++fbZaehler), zeit:minAb(-40), typ:'Lob', text:'Sehr freundliches Team, die Behandlung hat spürbar geholfen. Danke!', name:'C. Neumann', status:'erledigt'},
+  ];
+  logEintrag('System gestartet, Demo-Daten geladen (15 Termine inkl. 1 Notfall, 5 Räume, 4 Behandler).', START);
+}
+function logEintrag(text, wann){ state.log.unshift({zeit:wann||jetzt(), text}); if(state.log.length>60) state.log.pop(); }
+
+/* ---------- Fachlogik ---------- */
+function behandlerName(id){ const b=state.behandler.find(b=>b.id===id); return b?b.name:'–'; }
+function raumName(id){ const r=state.raeume.find(r=>r.id===id); return r?r.name:'–'; }
+function anzeigeName(t){ return state.anzeigeModus==='nummer'?('Nr. '+t.nummer):t.patient.initialen; }
+function terminEnde(t){ const e=new Date(t.zeit); e.setMinutes(e.getMinutes()+t.dauer); return e; }
+function pName(t){ return state.sichtschutz?t.patient.initialen:esc(t.patient.name); }
+
+function raumVerzugMin(raumId){
+  const n=jetzt();
+  const akt=state.termine.find(t=>t.raumId===raumId&&t.status==='inBehandlung');
+  if(akt) return Math.max(0,minutenDiff(n,terminEnde(akt)));
+  const nx=state.termine.filter(t=>t.raumId===raumId&&['anwesend','geplant'].includes(t.status)).sort((a,b)=>a.zeit-b.zeit)[0];
+  return nx?Math.max(0,minutenDiff(n,nx.zeit)):0;
+}
+function ampelKlasse(min){ return min<=5?'gruen':(min<=15?'gelb':'rot'); }
+function raumFreiAb(raumId){
+  const offen=state.termine.filter(t=>t.raumId===raumId&&!['abgeschlossen','nichtErschienen'].includes(t.status));
+  if(!offen.length) return 'jetzt frei';
+  return 'frei ab ca. '+hhmm(terminEnde(offen.sort((a,b)=>terminEnde(b)-terminEnde(a))[0]));
+}
+function checkin(terminId, manuell){
+  const t=state.termine.find(t=>t.id===terminId); if(!t) return;
+  t.status='anwesend'; t.checkinZeit=jetzt();
+  logEintrag((manuell?'Empfang: ':'Kiosk: ')+anzeigeName(t)+' eingecheckt.');
+  renderAlles();
+}
+function naechstenAufrufen(raumId){
+  const n=jetzt();
+  const akt=state.termine.find(t=>t.raumId===raumId&&t.status==='inBehandlung');
+  if(akt){ akt.status='abgeschlossen'; logEintrag(raumName(raumId)+': Behandlung '+anzeigeName(akt)+' abgeschlossen.'); }
+  const next=state.termine.filter(t=>t.raumId===raumId&&t.status==='anwesend')
+    .sort((a,b)=>(b.dringend-a.dringend)||(a.zeit-b.zeit))[0];
+  if(next){
+    next.status='inBehandlung'; next.aufrufZeit=n;
+    state.aufrufe.push({terminId:next.id, zeit:n});
+    logEintrag(raumName(raumId)+': '+anzeigeName(next)+(next.dringend?' (dringend, vorgezogen)':'')+' aufgerufen.');
+  } else if(!akt){ logEintrag(raumName(raumId)+': Aufruf ohne wartenden Patienten.'); }
+  renderAlles();
+}
+function autoNoShow(){
+  const n=jetzt(); let g=false;
+  state.termine.forEach(t=>{
+    if(t.status==='geplant'&&minutenDiff(n,t.zeit)>20){
+      t.status='nichtErschienen'; g=true;
+      logEintrag('Automatik: Termin '+hhmm(t.zeit)+' ('+anzeigeName(t)+') als „nicht erschienen" markiert.');
+    }
+  });
+  if(g) renderAlles();
+}
+function anonymisieren(){
+  let n=0;
+  state.termine.forEach(t=>{
+    if(['abgeschlossen','nichtErschienen'].includes(t.status)&&!t.anonymisiert){
+      t.patient.name=t.patient.initialen; t.patient.geburtsdatum='—'; t.anonymisiert=true; n++;
+    }
+  });
+  logEintrag('Datenschutz: '+n+' abgeschlossene Datensätze anonymisiert.');
+  renderAlles();
+}
+function logLeeren(){ state.log=[]; logEintrag('Datenschutz: Ereignis-Log gelöscht.'); renderAlles(); }
+
+/* ---------- Kennzahlen ---------- */
+function kennzahlen(){
+  const T=state.termine;
+  const fol=T.filter(t=>['abgeschlossen','inBehandlung'].includes(t.status));
+  const auslastung={};
+  state.raeume.forEach(r=>{ auslastung[r.id]=fol.filter(t=>t.raumId===r.id).reduce((s,t)=>s+t.dauer,0); });
+  const mw=T.filter(t=>t.checkinZeit&&t.aufrufZeit);
+  const warteMin=mw.length?Math.round(mw.reduce((s,t)=>s+Math.max(0,minutenDiff(t.aufrufZeit,t.checkinZeit)),0)/mw.length):0;
+  const noShow=T.filter(t=>t.status==='nichtErschienen').length;
+  const vergangen=T.filter(t=>t.zeit<jetzt()).length||1;
+  const verzugRaeume=state.raeume.filter(r=>raumVerzugMin(r.id)>5).length;
+  const offeneBeschwerden=state.feedback.filter(f=>f.typ==='Beschwerde'&&f.status!=='erledigt').length;
+  return {auslastung, warteMin, noShowQuote:Math.round(100*noShow/vergangen), verzugRaeume, offeneBeschwerden};
+}
+
+/* ============================================================
+   ANMELDUNG (Benutzername + Passwort → sichtbare Bereiche)
+   ============================================================ */
+function renderLogin(){
+  return `<div class="karte login">
+    <h1>${esc(state.praxisName)}</h1>
+    <p class="sub">Bitte anmelden, um fortzufahren</p>
+    <div class="feld"><label>Benutzername</label>
+      <input id="l_u" autocapitalize="none" autocomplete="username" placeholder="Benutzername" onkeydown="if(event.key==='Enter')anmelden()"></div>
+    <div class="feld"><label>Passwort</label>
+      <input id="l_p" type="password" autocomplete="current-password" placeholder="Passwort" onkeydown="if(event.key==='Enter')anmelden()"></div>
+    <div class="fehltext" id="l_fehler"></div>
+    <button class="btn primaer" style="width:100%" onclick="anmelden()">Anmelden</button>
+    <div class="demo-konten">
+      <b style="font-family:'Instrument Sans';font-weight:600;color:var(--text)">Demo-Zugänge:</b><br>
+      Leitung (alles): <b>leitung / chef123</b><br>
+      Empfang: <b>empfang / empfang123</b><br>
+      Behandler Raum 1: <b>raum1 / raum123</b><br>
+      Check-in-Tablet: <b>kiosk / kiosk123</b><br>
+      Wartebereich-Display: <b>anzeige / anzeige123</b>
+    </div>
+  </div>`;
+}
+function anmelden(){
+  const u=document.getElementById('l_u').value.trim(), p=document.getElementById('l_p').value;
+  const b=state.benutzer.find(b=>b.u===u&&b.p===p);
+  if(!b){ document.getElementById('l_fehler').textContent='Benutzername oder Passwort falsch.'; return; }
+  state.aktuellerBenutzer=b;
+  const perms=permsForUser(b);
+  state.ansicht=perms.includes('empfang')?'empfang':perms[0]||null;
+  if(b.festerRaum) state.aktiverRaum=b.festerRaum;
+  if(state.ansicht==='checkin') state.kioskSchritt={modus:'start'};
+  logEintrag('Anmeldung: '+b.name+' ('+rollenName(b)+').');
+  renderAlles();
+}
+function abmelden(){
+  logEintrag('Abmeldung: '+state.aktuellerBenutzer.name+'.');
+  state.aktuellerBenutzer=null; state.ansicht=null; state.sichtschutz=false;
+  renderAlles();
+}
+
+/* ---------- Navigation nach Berechtigung ---------- */
+function renderNav(){
+  const nav=document.getElementById('hauptNav'), ka=document.getElementById('kopfAktionen');
+  const u=state.aktuellerBenutzer;
+  if(!u){ nav.innerHTML=''; ka.innerHTML=''; return; }
+  const perms=permsForUser(u);
+  nav.innerHTML=perms.map(f=>'<button class="tab'+(state.ansicht===f?' aktiv':'')+'" onclick="wechsleAnsicht(\''+f+'\')">'+FEATURE_TAB[f]+'</button>').join('');
+  const a=['<span class="wer">👤 '+esc(u.name)+' · '+esc(rollenName(u))+'</span>'];
+  if(state.ansicht==='empfang'&&darf('empfang'))
+    a.push('<button class="btn klein" onclick="state.sichtschutz=!state.sichtschutz;logEintrag(\'Empfang: Sichtschutz \'+(state.sichtschutz?\'aktiviert\':\'deaktiviert\')+\'.\');renderAlles()">'+(state.sichtschutz?'👁 Sichtschutz aus':'🙈 Sichtschutz an')+'</button>');
+  a.push('<button class="btn klein" onclick="abmelden()">Abmelden</button>');
+  ka.innerHTML=a.join('');
+}
+function wechsleAnsicht(f){
+  if(!darf(f)) return;
+  state.ansicht=f;
+  if(f==='checkin') state.kioskSchritt={modus:'start'};
+  renderAlles();
+}
+
+/* ============================================================
+   ANSICHTEN
+   ============================================================ */
+const STATUS_TEXT={geplant:'geplant', anwesend:'wartet', inBehandlung:'in Behandlung', abgeschlossen:'abgeschlossen', nichtErschienen:'nicht erschienen'};
+function chip(t){ return '<span class="chip '+t.status+'">'+STATUS_TEXT[t.status]+'</span>'+(t.dringend?' <span class="chip dringend">dringend</span>':''); }
+
+/* ---------- Empfang & Termine ---------- */
+function renderEmpfang(){
+  const raumKarten=state.raeume.map(r=>{
+    const verzug=raumVerzugMin(r.id);
+    const akt=state.termine.find(t=>t.raumId===r.id&&t.status==='inBehandlung');
+    const beh=state.behandler.find(b=>b.raumHeute===r.id);
+    const nx=state.termine.filter(t=>t.raumId===r.id&&['anwesend','geplant'].includes(t.status)).sort((a,b)=>(b.dringend-a.dringend)||(a.zeit-b.zeit))[0];
+    return `<div class="karte">
+      <div class="raum-kopf"><span class="ampel ${ampelKlasse(verzug)}" title="Verzögerungs-Ampel"></span>
+        <h3>${esc(r.name)}</h3><span class="frei-ab mono">${raumFreiAb(r.id)}</span></div>
+      <div style="font-size:13.5px;color:var(--text2);margin-bottom:8px">Behandler: ${beh?esc(beh.name):'– heute nicht besetzt –'}${verzug>5?' · <b style="color:var(--warn)">+'+verzug+' Min Verzug</b>':''}</div>
+      <div style="font-size:14.5px">${akt?('Jetzt: <b>'+pName(akt)+'</b> <span class="mono">('+hhmm(akt.zeit)+')</span>'):'Kein Patient in Behandlung'}</div>
+      <div style="font-size:14.5px;color:var(--text2)">${nx?('Danach: '+pName(nx)+' <span class="mono">'+hhmm(nx.zeit)+'</span> '+chip(nx)):'Keine weiteren Termine'}</div>
+    </div>`;
+  }).join('');
+
+  const heute=state.termine.slice().sort((a,b)=>a.zeit-b.zeit).map(t=>`
+    <div class="zeile klickbar" onclick="oeffneTerminModal('${t.id}')" title="Antippen zum Bearbeiten">
+      <span class="zeit mono">${hhmm(t.zeit)}</span>
+      <span class="name">${pName(t)} <span class="meta mono">(${t.nummer})</span>${t.kioskGesperrt?' <span class="chip nichtErschienen" title="3× falsches Geburtsdatum am Kiosk">Kiosk gesperrt</span>':''}</span>
+      <span class="meta">${esc(t.behandlungsart)} · ${esc(raumName(t.raumId))} · ${esc(behandlerName(t.behandlerId))}</span>
+      ${chip(t)}
+      ${t.status==='geplant'?'<button class="btn klein" onclick="event.stopPropagation();checkin(\''+t.id+'\',true)">Einchecken</button>':''}
+    </div>`).join('');
+
+  return `
+  <div class="abschnitt-titel"><div><div class="eyebrow">Empfang / Leitung ${state.sichtschutz?'· Sichtschutz aktiv (Namen maskiert)':''}</div><h2>Alle Räume in Echtzeit</h2></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn gefahr" onclick="oeffneTerminModal(null,{notfall:true})">🚨 Notfall / ohne Termin</button>
+      <button class="btn primaer" onclick="oeffneTerminModal(null)">+ Termin anlegen</button>
+    </div></div>
+  <div class="raster raster-3">${raumKarten}</div>
+  <div class="abschnitt-titel"><h2>Termine heute</h2>
+    <span style="color:var(--text2);font-size:13.5px">Zeile antippen = bearbeiten, verschieben, No-Show setzen oder löschen</span></div>
+  <div class="karte">${heute||'<div class="leer">Keine Termine – Tag frei! 🎉</div>'}</div>`;
+}
+
+/* ---------- Beschwerden & Feedback ---------- */
+function renderBeschwerden(){
+  const kz=kennzahlen();
+  const liste=state.feedback.slice().sort((a,b)=>b.zeit-a.zeit).map(f=>`
+    <div class="zeile">
+      <span class="zeit mono">${hhmm(f.zeit)}</span>
+      <span class="chip ${f.typ==='Beschwerde'?'offen':(f.typ==='Lob'?'erledigt':'geplant')}">${f.typ}</span>
+      <span class="name" style="font-weight:400">${esc(f.text)}${f.name?' <span class="meta">– '+esc(f.name)+'</span>':' <span class="meta">– anonym</span>'}</span>
+      <select style="width:auto" onchange="feedbackStatus('${f.id}',this.value)">
+        ${['offen','inBearbeitung','erledigt'].map(s=>'<option value="'+s+'"'+(f.status===s?' selected':'')+'>'+(s==='inBearbeitung'?'in Bearbeitung':s)+'</option>').join('')}
+      </select>
+      <button class="btn klein gefahr" onclick="feedbackLoeschen('${f.id}')">Löschen</button>
+    </div>`).join('');
+  return `
+  <div class="abschnitt-titel"><div><div class="eyebrow">Rückmeldungen der Patienten</div>
+    <h2>Beschwerden & Feedback ${kz.offeneBeschwerden?'<span class="chip offen">'+kz.offeneBeschwerden+' offen</span>':''}</h2></div>
+    <span style="color:var(--text2);font-size:13.5px">Eingang über den Check-in-Kiosk oder direkt am Tresen</span></div>
+  <div class="karte">${liste||'<div class="leer">Keine Einträge – nichts offen! ✅</div>'}</div>`;
+}
+function feedbackStatus(id,s){ const f=state.feedback.find(f=>f.id===id); if(f){f.status=s; logEintrag('Feedback-Status geändert → '+s+'.'); renderAlles();} }
+function feedbackLoeschen(id){ state.feedback=state.feedback.filter(f=>f.id!==id); logEintrag('Feedback-Eintrag gelöscht.'); renderAlles(); }
+
+/* ---------- Auswertungen ---------- */
+function renderAuswertung(){
+  const kz=kennzahlen();
+  const ausl=state.raeume.map(r=>`<div class="kpi karte"><div class="wert">${kz.auslastung[r.id]||0}<span style="font-size:14px"> Min</span></div><div class="label">${esc(r.name.split('·')[0].trim())} belegt</div></div>`).join('');
+  return `
+  <div class="abschnitt-titel"><div><div class="eyebrow">Kennzahlen aus den Live-Daten</div><h2>Auswertungen</h2></div></div>
+  <div class="raster raster-4">
+    <div class="kpi karte"><div class="wert">${kz.warteMin}<span style="font-size:14px"> Min</span></div><div class="label">Ø Wartezeit Check-in → Aufruf</div></div>
+    <div class="kpi karte"><div class="wert">${kz.noShowQuote}<span style="font-size:14px"> %</span></div><div class="label">No-Show-Quote</div></div>
+    <div class="kpi karte"><div class="wert">${kz.verzugRaeume}</div><div class="label">Räume im Verzug (&gt; 5 Min)</div></div>
+    <div class="kpi karte"><div class="wert">${state.termine.filter(t=>t.status==='anwesend').length}</div><div class="label">Patienten im Wartebereich</div></div>
+  </div>
+  <div class="abschnitt-titel"><h2>Auslastung je Raum</h2></div>
+  <div class="raster raster-4">${ausl}</div>`;
+}
+
+/* ---------- Datenschutz & Log ---------- */
+function renderDatenschutz(){
+  return `
+  <div class="abschnitt-titel"><div><div class="eyebrow">Datenschutz by Design</div><h2>Datenschutz & Löschkonzept</h2></div></div>
+  <div class="karte">
+    <p style="color:var(--text2);font-size:14px;margin-bottom:12px">Anwesenheits- und Check-in-Daten so kurz wie möglich aufbewahren. Abgeschlossene Termine lassen sich anonymisieren (Name → Initialen, Geburtsdatum entfernt); das Ereignis-Log ist datensparsam formuliert und löschbar. Aufbewahrungsfristen im echten Projekt mit dem Datenschutzbeauftragten festlegen.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn" onclick="anonymisieren()">Abgeschlossene Termine anonymisieren</button>
+      <button class="btn" onclick="logLeeren()">Ereignis-Log löschen</button>
+    </div>
+  </div>
+  <div class="abschnitt-titel"><h2>Ereignis-Log</h2><span style="color:var(--text2);font-size:13.5px">datensparsam: nur Initialen/Nummern</span></div>
+  <div class="karte">${state.log.map(l=>'<div class="log-eintrag"><span class="lz">'+hhmm(l.zeit)+'</span>'+esc(l.text)+'</div>').join('')||'<div class="leer">Log ist leer.</div>'}</div>`;
+}
+
+/* ---------- Verwaltung: Konten, eigene Rollen, Einstellungen ---------- */
+function renderVerwaltung(){
+  const ich=state.aktuellerBenutzer;
+  const konten=state.benutzer.map(b=>`
+    <div class="zeile">
+      <span class="name">${esc(b.name)} ${b.chef?'<span class="chip rolle">Chef</span>':''}</span>
+      <span class="chip rolle">${esc(rollenName(b))}</span>
+      ${b.festerRaum?'<span class="meta">fester Raum: '+esc(raumName(b.festerRaum))+'</span>':''}
+      <span class="meta mono">Login: ${esc(b.u)}</span>
+      <button class="btn klein" onclick="oeffneKontoModal('${b.id}')">Bearbeiten</button>
+      ${b.chef?'':'<button class="btn klein gefahr" onclick="kontoLoeschen(\''+b.id+'\')">Löschen</button>'}
+    </div>`).join('');
+
+  const rollen=state.rollen.map(r=>`
+    <div class="zeile">
+      <span class="name">${esc(r.name)}</span>
+      <span class="meta">${r.perms.map(p=>FEATURE_TAB[p]).join(', ')||'– keine Bereiche –'}</span>
+      <button class="btn klein" onclick="oeffneRolleModal('${r.id}')">Bearbeiten</button>
+      <button class="btn klein gefahr" onclick="rolleLoeschen('${r.id}')">Löschen</button>
+    </div>`).join('');
+
+  const raumZeilen=state.raeume.map(r=>`
+    <div style="display:flex;gap:8px;margin-bottom:6px">
+      <input id="e_raum_${r.id}" value="${esc(r.name)}">
+      <button class="btn klein gefahr" onclick="raumLoeschen('${r.id}')" title="Raum entfernen">✕</button>
+    </div>`).join('');
+
+  const behZeilen=state.behandler.map(b=>`
+    <div style="display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+      <input id="e_beh_${b.id}" value="${esc(b.name)}" style="flex:1;min-width:130px">
+      <select id="e_behraum_${b.id}" style="flex:1;min-width:130px">${state.raeume.map(r=>'<option value="'+r.id+'"'+(b.raumHeute===r.id?' selected':'')+'>'+esc(r.name)+'</option>').join('')}</select>
+      <button class="btn klein gefahr" onclick="behandlerAusfall('${b.id}')" title="Alle offenen Termine übertragen">krank →</button>
+      <button class="btn klein gefahr" onclick="behandlerLoeschen('${b.id}')" title="Behandler entfernen">✕</button>
+    </div>`).join('');
+
+  return `
+  <div class="abschnitt-titel"><div><div class="eyebrow">Nur für Leitung / Rollen mit Verwaltungsrecht</div><h2>Verwaltung</h2></div></div>
+
+  <div class="abschnitt-titel"><h3>Konten (wer sich anmelden kann – bestimmt, wer was sieht)</h3>
+    <button class="btn primaer klein" onclick="oeffneKontoModal(null)">+ Konto anlegen</button></div>
+  <div class="karte">${konten}</div>
+
+  <div class="abschnitt-titel"><h3>Eigene Rollen (Bereiche pro Rolle frei wählbar)</h3>
+    <button class="btn primaer klein" onclick="oeffneRolleModal(null)">+ Rolle erstellen</button></div>
+  <div class="karte">${rollen||'<div class="leer">Noch keine eigenen Rollen – die Standard-Rollen (Leitung, Empfang, Behandler, Kiosk, Anzeige) sind aktiv. Lege eigene Rollen an, um genau zu bestimmen, welche Bereiche sichtbar sind.</div>'}</div>
+
+  <div class="abschnitt-titel"><h3>Praxis-Einstellungen</h3></div>
+  <div class="karte">
+    <div class="raster raster-2">
+      <div class="feld"><label>Praxisname (Kopfzeile)</label><input id="e_praxis" value="${esc(state.praxisName)}"></div>
+      <div class="feld"><label>Öffentliche Anzeige zeigt</label>
+        <select id="e_modus">
+          <option value="initialen" ${state.anzeigeModus==='initialen'?'selected':''}>Initialen (z. B. „M. F.")</option>
+          <option value="nummer" ${state.anzeigeModus==='nummer'?'selected':''}>Aufrufnummer (z. B. „Nr. A03")</option>
+        </select></div>
+    </div>
+    <div class="feld"><label>Öffentliche Anzeige</label>
+      <select id="e_aktiv"><option value="1" ${state.anzeigeAktiv?'selected':''}>eingeschaltet</option><option value="0" ${!state.anzeigeAktiv?'selected':''}>pausiert</option></select></div>
+    <div class="feld"><label>Räume (umbenennen, entfernen, hinzufügen)</label>
+      ${raumZeilen}
+      <button class="btn klein" onclick="raumHinzufuegen()">+ Raum hinzufügen</button></div>
+    <div class="feld"><label>Behandler (Name · heutiger Raum · Ausfall · entfernen)</label>
+      ${behZeilen}
+      <button class="btn klein" onclick="behandlerHinzufuegen()">+ Behandler hinzufügen</button></div>
+    <button class="btn primaer" onclick="einstellungenSpeichern()">Einstellungen speichern</button>
+  </div>
+
+  <div class="abschnitt-titel"><h3>Eigenes Passwort ändern</h3></div>
+  <div class="karte">
+    <p style="color:var(--text2);font-size:14px;margin-bottom:10px">Angemeldet als <b>${esc(ich.name)}</b> (Login: <span class="mono">${esc(ich.u)}</span>).</p>
+    <div class="raster raster-2">
+      <div class="feld"><label>Neues Passwort</label><input id="pw_neu" type="password"></div>
+      <div class="feld"><label>Wiederholen</label><input id="pw_neu2" type="password"></div>
+    </div>
+    <div class="fehltext" id="pw_fehler"></div>
+    <button class="btn primaer" onclick="eigenesPasswort()">Passwort ändern</button>
+  </div>`;
+}
+function einstellungenSpeichern(){
+  state.praxisName=document.getElementById('e_praxis').value.trim()||'PraxisDesk';
+  state.anzeigeModus=document.getElementById('e_modus').value;
+  state.anzeigeAktiv=document.getElementById('e_aktiv').value==='1';
+  state.raeume.forEach(r=>{ const el=document.getElementById('e_raum_'+r.id); if(el) r.name=el.value.trim()||r.name; });
+  state.behandler.forEach(b=>{
+    const n=document.getElementById('e_beh_'+b.id), s=document.getElementById('e_behraum_'+b.id);
+    if(n) b.name=n.value.trim()||b.name; if(s) b.raumHeute=s.value;
+  });
+  logEintrag('Verwaltung: Einstellungen gespeichert.');
+  renderAlles();
+}
+function raumHinzufuegen(){ einstellungenLesenOhneSpeichernHinweis(); const nr=state.raeume.length+1; state.raeume.push({id:neuId('r'), name:'Raum '+nr}); logEintrag('Verwaltung: Raum hinzugefügt.'); renderAlles(); }
+function raumLoeschen(id){
+  if(state.termine.some(t=>t.raumId===id&&!['abgeschlossen','nichtErschienen'].includes(t.status))){
+    alert('Dieser Raum hat noch offene Termine – bitte zuerst verschieben (Termin antippen) oder Behandler-Ausfall nutzen.'); return;
+  }
+  einstellungenLesenOhneSpeichernHinweis();
+  state.raeume=state.raeume.filter(r=>r.id!==id);
+  state.behandler.forEach(b=>{ if(b.raumHeute===id) b.raumHeute=state.raeume[0]?state.raeume[0].id:null; });
+  logEintrag('Verwaltung: Raum entfernt.'); renderAlles();
+}
+function behandlerHinzufuegen(){ einstellungenLesenOhneSpeichernHinweis(); state.behandler.push({id:neuId('b'), name:'Neuer Behandler', raumHeute:state.raeume[0]?state.raeume[0].id:null}); logEintrag('Verwaltung: Behandler hinzugefügt.'); renderAlles(); }
+function behandlerLoeschen(id){
+  if(state.termine.some(t=>t.behandlerId===id&&!['abgeschlossen','nichtErschienen'].includes(t.status))){
+    alert('Dieser Behandler hat noch offene Termine – bitte zuerst über „krank →" übertragen.'); return;
+  }
+  einstellungenLesenOhneSpeichernHinweis();
+  state.behandler=state.behandler.filter(b=>b.id!==id);
+  logEintrag('Verwaltung: Behandler entfernt.'); renderAlles();
+}
+/* Vor strukturellen Änderungen die aktuellen Eingaben übernehmen, damit nichts verloren geht */
+function einstellungenLesenOhneSpeichernHinweis(){
+  const p=document.getElementById('e_praxis'); if(p) state.praxisName=p.value.trim()||state.praxisName;
+  state.raeume.forEach(r=>{ const el=document.getElementById('e_raum_'+r.id); if(el) r.name=el.value.trim()||r.name; });
+  state.behandler.forEach(b=>{
+    const n=document.getElementById('e_beh_'+b.id), s=document.getElementById('e_behraum_'+b.id);
+    if(n) b.name=n.value.trim()||b.name; if(s) b.raumHeute=s.value;
+  });
+}
+function eigenesPasswort(){
+  const p=document.getElementById('pw_neu').value, p2=document.getElementById('pw_neu2').value, f=document.getElementById('pw_fehler');
+  if(p.length<6){ f.textContent='Mindestens 6 Zeichen.'; return; }
+  if(p!==p2){ f.textContent='Die Passwörter stimmen nicht überein.'; return; }
+  state.aktuellerBenutzer.p=p; f.textContent='';
+  logEintrag('Konto: Eigenes Passwort geändert.');
+  document.getElementById('pw_neu').value=''; document.getElementById('pw_neu2').value='';
+  f.style.color='var(--fertig)'; f.textContent='✓ Passwort geändert.';
+}
+
+/* ---------- Konto-Modal ---------- */
+function oeffneKontoModal(id){
+  const b=id?state.benutzer.find(b=>b.id===id):null;
+  const rolleAuswahl=`
+    <optgroup label="Standard-Rollen">
+      ${Object.entries(BUILTIN_ROLES).map(([k,r])=>'<option value="std:'+k+'"'+((b&&!b.roleId&&b.role===k)?' selected':'')+'>'+r.name+'</option>').join('')}
+    </optgroup>
+    ${state.rollen.length?'<optgroup label="Eigene Rollen">'+state.rollen.map(r=>'<option value="own:'+r.id+'"'+((b&&b.roleId===r.id)?' selected':'')+'>'+esc(r.name)+'</option>').join('')+'</optgroup>':''}`;
+  document.getElementById('modalWurzel').innerHTML=`
+  <div class="modal-hg" onclick="if(event.target===this)schliesseModal()">
+    <div class="modal">
+      <h2>${b?'Konto bearbeiten':'Neues Konto anlegen'}</h2>
+      <div class="feld"><label>Anzeigename (Person oder Gerät)</label><input id="k_name" value="${b?esc(b.name):''}" placeholder="z. B. Tablet Eingang, M. Sato"></div>
+      ${b&&b.chef?'<p style="color:var(--text2);font-size:13.5px;margin-bottom:12px">Chef-Konto: Rolle ist fest „Leitung (alles)" und das Konto kann nicht gelöscht werden.</p>':`
+      <div class="feld"><label>Rolle / Zugriff (bestimmt die sichtbaren Bereiche)</label>
+        <select id="k_rolle">${rolleAuswahl}</select></div>`}
+      <div class="feld"><label>Fester Raum (optional – für Behandler-Konten: nur dieser Raum wird angezeigt)</label>
+        <select id="k_raum"><option value="">– kein fester Raum –</option>
+          ${state.raeume.map(r=>'<option value="'+r.id+'"'+((b&&b.festerRaum===r.id)?' selected':'')+'>'+esc(r.name)+'</option>').join('')}</select></div>
+      <div class="raster raster-2">
+        <div class="feld"><label>Benutzername (zum Anmelden)</label><input id="k_u" value="${b?esc(b.u):''}" autocapitalize="none" placeholder="z. B. raum2"></div>
+        <div class="feld"><label>Passwort (min. 6 Zeichen)</label><input id="k_p" value="${b?esc(b.p):''}" placeholder="Passwort"></div>
+      </div>
+      <p style="color:var(--text2);font-size:12.5px;margin-bottom:6px">Demo: Passwörter werden hier sichtbar verwaltet. Im Echtbetrieb sind sie sicher verschlüsselt und nicht einsehbar.</p>
+      <div class="fehltext" id="k_fehler"></div>
+      <div class="fuss-knoepfe">
+        <button class="btn" onclick="schliesseModal()">Abbrechen</button>
+        <button class="btn primaer" onclick="kontoSpeichern(${b?'\''+b.id+'\'':'null'})">Speichern</button>
+      </div>
+    </div>
+  </div>`;
+}
+function kontoSpeichern(id){
+  const g=x=>{const e=document.getElementById(x);return e?e.value:null;};
+  const name=g('k_name').trim(), u=g('k_u').trim(), p=g('k_p'), f=document.getElementById('k_fehler');
+  if(!name||!u){ f.textContent='Bitte Anzeigename und Benutzername angeben.'; return; }
+  if(p.length<6){ f.textContent='Passwort: mindestens 6 Zeichen.'; return; }
+  if(state.benutzer.some(b=>b.u===u&&b.id!==id)){ f.textContent='Dieser Benutzername ist schon vergeben.'; return; }
+  const rw=g('k_rolle'); let role=null, roleId=null;
+  if(rw){ if(rw.startsWith('std:')){ role=rw.slice(4); } else { roleId=rw.slice(4); role=null; } }
+  const festerRaum=g('k_raum')||null;
+  if(id){
+    const b=state.benutzer.find(b=>b.id===id);
+    b.name=name; b.u=u; b.p=p; b.festerRaum=festerRaum;
+    if(!b.chef){ b.role=role||b.role; b.roleId=roleId; if(roleId) b.role=null; }
+    logEintrag('Verwaltung: Konto „'+name+'" geändert.');
+  } else {
+    state.benutzer.push({id:neuId('u'), u, p, name, chef:false, role:role||'empfang', roleId, festerRaum});
+    logEintrag('Verwaltung: Konto „'+name+'" angelegt ('+(roleId?'eigene Rolle':BUILTIN_ROLES[role].name)+').');
+  }
+  schliesseModal(); renderAlles();
+}
+function kontoLoeschen(id){
+  const b=state.benutzer.find(b=>b.id===id);
+  if(!b||b.chef) return;
+  if(state.aktuellerBenutzer.id===id){ alert('Du kannst das Konto nicht löschen, mit dem du gerade angemeldet bist.'); return; }
+  state.benutzer=state.benutzer.filter(x=>x.id!==id);
+  logEintrag('Verwaltung: Konto „'+b.name+'" gelöscht – Zugang entzogen.');
+  renderAlles();
+}
+
+/* ---------- Rollen-Modal (Bereiche per Häkchen) ---------- */
+function oeffneRolleModal(id){
+  const r=id?state.rollen.find(r=>r.id===id):null;
+  document.getElementById('modalWurzel').innerHTML=`
+  <div class="modal-hg" onclick="if(event.target===this)schliesseModal()">
+    <div class="modal">
+      <h2>${r?'Rolle bearbeiten':'Neue Rolle'}</h2>
+      <div class="feld"><label>Name der Rolle</label><input id="r_name" value="${r?esc(r.name):''}" placeholder="z. B. Azubi, Vertretung"></div>
+      <div class="feld"><label>Sichtbare Bereiche</label>
+        ${FEATURES.map(f=>`<label class="haeckchen"><input type="checkbox" id="r_p_${f.id}" ${r&&r.perms.includes(f.id)?'checked':''}> ${f.label}</label>`).join('')}
+      </div>
+      <div class="fehltext" id="r_fehler"></div>
+      <div class="fuss-knoepfe">
+        <button class="btn" onclick="schliesseModal()">Abbrechen</button>
+        <button class="btn primaer" onclick="rolleSpeichern(${r?'\''+r.id+'\'':'null'})">Speichern</button>
+      </div>
+    </div>
+  </div>`;
+}
+function rolleSpeichern(id){
+  const name=document.getElementById('r_name').value.trim();
+  if(!name){ document.getElementById('r_fehler').textContent='Bitte einen Rollennamen angeben.'; return; }
+  const perms=FEATURES.filter(f=>document.getElementById('r_p_'+f.id).checked).map(f=>f.id);
+  if(id){ const r=state.rollen.find(r=>r.id===id); r.name=name; r.perms=perms; logEintrag('Verwaltung: Rolle „'+name+'" geändert.'); }
+  else { state.rollen.push({id:neuId('ro'), name, perms}); logEintrag('Verwaltung: Rolle „'+name+'" erstellt.'); }
+  schliesseModal(); renderAlles();
+}
+function rolleLoeschen(id){
+  const inBenutzung=state.benutzer.some(b=>b.roleId===id);
+  if(inBenutzung){ alert('Diese Rolle wird noch von einem Konto verwendet – bitte dort zuerst eine andere Rolle wählen.'); return; }
+  state.rollen=state.rollen.filter(r=>r.id!==id);
+  logEintrag('Verwaltung: Rolle gelöscht.'); renderAlles();
+}
+
+/* ---------- Behandler-Ausfall ---------- */
+function behandlerAusfall(bId){
+  einstellungenLesenOhneSpeichernHinweis();
+  const b=state.behandler.find(b=>b.id===bId);
+  const ziele=state.behandler.filter(x=>x.id!==bId);
+  if(!ziele.length){ alert('Kein anderer Behandler vorhanden.'); return; }
+  document.getElementById('modalWurzel').innerHTML=`
+  <div class="modal-hg" onclick="if(event.target===this)schliesseModal()">
+    <div class="modal">
+      <h2>Behandler-Ausfall: ${esc(b.name)}</h2>
+      <p style="color:var(--text2);font-size:14px;margin-bottom:12px">Alle noch offenen Termine (geplant / wartet) von ${esc(b.name)} werden gesammelt übertragen an:</p>
+      <div class="feld"><select id="a_ziel">${ziele.map(z=>'<option value="'+z.id+'">'+esc(z.name)+' ('+esc(raumName(z.raumHeute))+')</option>').join('')}</select></div>
+      <div class="fuss-knoepfe">
+        <button class="btn" onclick="schliesseModal()">Abbrechen</button>
+        <button class="btn primaer" onclick="behandlerAusfallAusfuehren('${bId}')">Termine übertragen</button>
+      </div>
+    </div>
+  </div>`;
+}
+function behandlerAusfallAusfuehren(bId){
+  const zielId=document.getElementById('a_ziel').value;
+  const ziel=state.behandler.find(b=>b.id===zielId);
+  let n=0;
+  state.termine.forEach(t=>{
+    if(t.behandlerId===bId&&['geplant','anwesend'].includes(t.status)){ t.behandlerId=zielId; t.raumId=ziel.raumHeute; n++; }
+  });
+  logEintrag('Verwaltung: Behandler-Ausfall – '+n+' offene Termine an '+ziel.name+' übertragen.');
+  schliesseModal(); renderAlles();
+}
+
+/* ---------- Kiosk (Self-Check-in + Feedback) ---------- */
+function renderKiosk(){
+  const s=state.kioskSchritt;
+  if(s.modus==='start'){
+    return `<div class="kiosk">
+      <h1>Herzlich willkommen</h1>
+      <p class="sub">Was möchten Sie tun?</p>
+      <button class="btn primaer kiosk-gross" onclick="state.kioskSchritt={modus:'liste'};renderAlles()">✅ Zum Termin anmelden</button>
+      <button class="btn kiosk-gross" onclick="state.kioskSchritt={modus:'feedback'};renderAlles()">📝 Feedback oder Beschwerde abgeben</button>
+      <p style="margin-top:18px"><button class="btn klein" onclick="oeffneDatenschutz()">Datenschutzhinweis</button></p>
+    </div>`;
+  }
+  if(s.modus==='feedback'){
+    return `<div class="kiosk karte" style="text-align:left;padding:28px">
+      <h1 style="text-align:center">Ihre Rückmeldung</h1>
+      <p class="sub" style="text-align:center">Lob, Hinweis oder Beschwerde – gerne auch anonym.</p>
+      <div class="feld"><label>Art der Rückmeldung</label>
+        <select id="fb_typ"><option>Beschwerde</option><option>Hinweis</option><option>Lob</option></select></div>
+      <div class="feld"><label>Ihre Nachricht</label>
+        <textarea id="fb_text" placeholder="Was möchten Sie uns mitteilen?"></textarea></div>
+      <div class="feld"><label>Name (freiwillig – leer lassen für anonym)</label>
+        <input id="fb_name" placeholder="anonym"></div>
+      <div class="fehltext" id="fb_fehler"></div>
+      <button class="btn primaer kiosk-gross" onclick="feedbackSenden()">Absenden</button>
+      <button class="btn kiosk-gross" onclick="state.kioskSchritt={modus:'start'};renderAlles()">Zurück</button>
+    </div>`;
+  }
+  if(s.modus==='feedbackDanke'){
+    return `<div class="kiosk karte willkommen puls"><div class="haken">💌</div>
+      <h1>Vielen Dank!</h1><p class="sub">Ihre Rückmeldung wurde an die Praxisleitung übermittelt.</p></div>`;
+  }
+  if(s.modus==='geburt'){
+    const t=state.termine.find(t=>t.id===s.terminId);
+    if(!t||t.kioskGesperrt){ state.kioskSchritt={modus:'liste'}; return renderKiosk(); }
+    return `<div class="kiosk karte" style="padding:30px">
+      <div class="eyebrow">Identität bestätigen</div>
+      <h1>${esc(t.patient.name)}</h1>
+      <p class="sub">Bitte geben Sie zur Bestätigung Ihr <b>Geburtsdatum</b> ein<br>(Tag · Monat · Jahr):</p>
+      <div class="geb-anzeige">${formatGeb(s.eingabe)||'<span style="color:var(--text2)">TT.MM.JJJJ</span>'}</div>
+      <div class="fehltext">${s.fehler||''}</div>
+      <div class="ziffernblock">
+        ${[1,2,3,4,5,6,7,8,9].map(z=>'<button class="ziffer" onclick="kioskZiffer(\''+z+'\')">'+z+'</button>').join('')}
+        <button class="ziffer" onclick="kioskLoeschen()">⌫</button>
+        <button class="ziffer" onclick="kioskZiffer('0')">0</button>
+        <button class="ziffer" style="background:var(--verlauf);color:#fff" onclick="kioskPruefen()">OK</button>
+      </div>
+      <button class="btn kiosk-gross" onclick="state.kioskSchritt={modus:'liste'};renderAlles()">Zurück zur Liste</button>
+    </div>`;
+  }
+  if(s.modus==='fertig'){
+    const t=state.termine.find(t=>t.id===s.terminId);
+    return `<div class="kiosk karte willkommen puls">
+      <div class="haken">✅</div>
+      <h1>Willkommen${t?', '+esc(t.patient.name.split(' ')[0]):''}!</h1>
+      <p class="sub">Bitte nehmen Sie im Wartebereich Platz –<br>Sie werden aufgerufen.</p>
+      <p class="mono" style="color:var(--text2)">Diese Ansicht setzt sich gleich automatisch zurück …</p>
+    </div>`;
+  }
+  if(s.modus==='gesperrt'){
+    return `<div class="kiosk karte willkommen">
+      <div class="haken">🛎️</div>
+      <h1>Bitte am Empfang melden</h1>
+      <p class="sub">Die Bestätigung war dreimal nicht möglich.<br>Unser Team hilft Ihnen gerne persönlich weiter.</p>
+      <button class="btn primaer kiosk-gross" onclick="state.kioskSchritt={modus:'start'};renderAlles()">Zurück zum Start</button>
+    </div>`;
+  }
+  const offen=state.termine.filter(t=>t.status==='geplant').sort((a,b)=>a.zeit-b.zeit);
+  return `<div class="kiosk">
+    <h1>Anmeldung</h1>
+    <p class="sub">Bitte tippen Sie auf Ihren Namen.<br><span style="font-size:14px">Zur Sicherheit fragen wir anschließend Ihr Geburtsdatum ab.</span></p>
+    ${offen.map(t=>t.kioskGesperrt
+      ? '<div class="kiosk-taste gesperrt">'+esc(t.patient.name)+'<span class="kt-zeit">Bitte am Empfang melden</span></div>'
+      : '<button class="kiosk-taste" onclick="state.kioskSchritt={modus:\'geburt\',terminId:\''+t.id+'\',eingabe:\'\',fehler:\'\'};renderAlles()">'+esc(t.patient.name)+'<span class="kt-zeit">'+hhmm(t.zeit)+' Uhr</span></button>').join('')
+     || '<div class="leer karte" style="padding:40px;font-size:18px">Alle Patienten sind eingecheckt – nichts offen! ✅<br><small>Ohne Termin? Bitte melden Sie sich am Empfang.</small></div>'}
+    <p style="color:var(--text2);font-size:14px;margin-top:16px">Ihr Name fehlt oder Sie kommen ohne Termin? Bitte wenden Sie sich an den Empfang.</p>
+    <button class="btn kiosk-gross" onclick="state.kioskSchritt={modus:'start'};renderAlles()">Zurück</button>
+  </div>`;
+}
+function formatGeb(z){
+  z=(z||'').slice(0,8);
+  let out=z.slice(0,2);
+  if(z.length>2) out+='.'+z.slice(2,4);
+  if(z.length>4) out+='.'+z.slice(4,8);
+  return out;
+}
+function kioskZiffer(d){ const s=state.kioskSchritt; if((s.eingabe||'').length<8){ s.eingabe=(s.eingabe||'')+d; s.fehler=''; renderAlles(); } }
+function kioskLoeschen(){ const s=state.kioskSchritt; s.eingabe=(s.eingabe||'').slice(0,-1); s.fehler=''; renderAlles(); }
+function kioskPruefen(){
+  const s=state.kioskSchritt;
+  const t=state.termine.find(t=>t.id===s.terminId); if(!t) return;
+  if(formatGeb(s.eingabe)===t.patient.geburtsdatum){
+    checkin(t.id,false);
+    state.kioskSchritt={modus:'fertig',terminId:t.id};
+    renderAlles();
+    setTimeout(()=>{ if(state.kioskSchritt.modus==='fertig'){ state.kioskSchritt={modus:'start'}; renderAlles(); } },5000);
+  } else {
+    t.kioskVersuche++;
+    if(t.kioskVersuche>=3){
+      t.kioskGesperrt=true;
+      logEintrag('Kiosk: 3× falsches Geburtsdatum für '+anzeigeName(t)+' – Kiosk-Check-in gesperrt.');
+      state.kioskSchritt={modus:'gesperrt'};
+    } else {
+      s.eingabe=''; s.fehler='Das Geburtsdatum stimmt nicht überein ('+t.kioskVersuche+'/3 Versuche).';
+    }
+    renderAlles();
+  }
+}
+function feedbackSenden(){
+  const text=document.getElementById('fb_text').value.trim();
+  if(!text){ document.getElementById('fb_fehler').textContent='Bitte geben Sie eine Nachricht ein.'; return; }
+  state.feedback.push({id:'f'+(++fbZaehler), zeit:jetzt(), typ:document.getElementById('fb_typ').value,
+    text, name:document.getElementById('fb_name').value.trim(), status:'offen'});
+  logEintrag('Kiosk: Neue Rückmeldung ('+document.getElementById('fb_typ').value+') eingegangen.');
+  state.kioskSchritt={modus:'feedbackDanke'};
+  renderAlles();
+  setTimeout(()=>{ if(state.kioskSchritt.modus==='feedbackDanke'){ state.kioskSchritt={modus:'start'}; renderAlles(); } },4000);
+}
+
+/* ---------- Behandlungsraum ---------- */
+function renderRaum(){
+  const u=state.aktuellerBenutzer;
+  const fest=u&&u.festerRaum?u.festerRaum:null;
+  const raumId=fest||state.aktiverRaum;
+  const r=state.raeume.find(r=>r.id===raumId)||state.raeume[0];
+  const beh=state.behandler.find(b=>b.raumHeute===r.id);
+  const verzug=raumVerzugMin(r.id);
+  const akt=state.termine.find(t=>t.raumId===r.id&&t.status==='inBehandlung');
+  const plan=state.termine.filter(t=>t.raumId===r.id).sort((a,b)=>a.zeit-b.zeit);
+  const wartend=plan.filter(t=>t.status==='anwesend').sort((a,b)=>(b.dringend-a.dringend)||(a.zeit-b.zeit));
+  const auswahl=fest
+    ? '<span class="chip rolle" title="Dieses Konto ist fest an diesen Raum gebunden – andere Räume sind nicht sichtbar.">fester Raum dieses Kontos</span>'
+    : '<select style="max-width:280px" onchange="state.aktiverRaum=this.value;renderAlles()">'+
+      state.raeume.map(x=>'<option value="'+x.id+'"'+(x.id===r.id?' selected':'')+'>'+esc(x.name)+'</option>').join('')+'</select>';
+
+  return `
+  <div class="abschnitt-titel"><div><div class="eyebrow">Behandlungsraum-Display</div>
+    <h2 style="display:flex;align-items:center;gap:10px"><span class="ampel ${ampelKlasse(verzug)}"></span>${esc(r.name)}</h2>
+    <div style="color:var(--text2);font-size:14px">Behandler heute: ${beh?esc(beh.name):'– nicht besetzt –'} · <span class="mono">${raumFreiAb(r.id)}</span>${verzug>5?' · <b style="color:var(--warn)">+'+verzug+' Min Verzug</b>':''}</div></div>
+    ${auswahl}</div>
+
+  <div class="raster raster-2">
+    <div class="karte">
+      <div class="eyebrow">Jetzt in Behandlung</div>
+      ${akt?`<h3 style="font-size:24px;margin:6px 0">${esc(akt.patient.name)} ${akt.dringend?'<span class="chip dringend">dringend</span>':''}</h3>
+        <div class="mono" style="color:var(--text2)">${hhmm(akt.zeit)}–${hhmm(terminEnde(akt))} · ${esc(akt.behandlungsart)}</div>`
+        :'<div class="leer" style="margin-top:8px">Kein Patient in Behandlung.</div>'}
+      <button class="btn primaer" style="margin-top:16px;width:100%;padding:16px;font-size:16px" onclick="naechstenAufrufen('${r.id}')">
+        ${akt?'Abschließen & nächsten aufrufen':'Nächsten Patienten aufrufen'} →</button>
+      ${wartend.length
+        ?'<div style="margin-top:10px;font-size:13.5px;color:var(--text2)">Als Nächstes: <b>'+esc(wartend[0].patient.name)+'</b>'+(wartend[0].dringend?' <span class="chip dringend">dringend</span>':'')+' (eingecheckt '+hhmm(wartend[0].checkinZeit)+')</div>'
+        :'<div style="margin-top:10px;font-size:13.5px;color:var(--text2)">Aktuell wartet niemand Eingechecktes für diesen Raum.</div>'}
+    </div>
+    <div class="karte">
+      <div class="eyebrow">Tagesplan ${esc(r.name)}</div>
+      ${plan.map(t=>`<div class="zeile"><span class="zeit mono">${hhmm(t.zeit)}</span>
+        <span class="name">${esc(t.patient.name)}</span><span class="meta">${esc(t.behandlungsart)}</span>${chip(t)}</div>`).join('')
+        ||'<div class="leer">Heute keine Termine in diesem Raum – alles frei! ✅</div>'}
+    </div>
+  </div>`;
+}
+
+/* ---------- Öffentliche Wartebereich-Anzeige ---------- */
+function renderAnzeige(){
+  if(!state.anzeigeAktiv){
+    return '<div class="anzeige" style="display:flex;align-items:center;justify-content:center"><h2 style="opacity:.6">Anzeige pausiert – bitte auf Aufruf durch das Personal achten.</h2></div>';
+  }
+  const letzte=state.aufrufe.slice(-5).reverse();
+  const wartend=state.termine.filter(t=>t.status==='anwesend').length;
+  return `<div class="anzeige">
+    <h2>Aufrufe</h2>
+    ${letzte.map((a,i)=>{
+      const t=state.termine.find(t=>t.id===a.terminId); if(!t) return '';
+      const raumNr=esc(raumName(t.raumId).split('·')[0].trim());
+      return `<div class="aufruf${i===0?' neu puls':''}"><span>${anzeigeName(t)}</span><span class="pfeil">→</span><span>${raumNr}</span><span style="font-size:16px;opacity:.7;margin-left:18px">${hhmm(a.zeit)}</span></div>`;
+    }).join('') || '<div class="aufruf" style="justify-content:center;opacity:.7">Noch keine Aufrufe – bitte gedulden Sie sich kurz.</div>'}
+    <div class="fuss">Derzeit ${wartend} ${wartend===1?'Person':'Personen'} im Wartebereich · Anzeige ohne volle Namen (Datenschutz) · ${state.anzeigeModus==='nummer'?'Aufruf per Nummer':'Aufruf per Initialen'}</div>
+  </div>`;
+}
+
+/* ---------- Haupt-Render ---------- */
+function renderAlles(){
+  renderNav();
+  document.getElementById('praxisName').textContent=state.praxisName;
+  const app=document.getElementById('app');
+  if(!state.aktuellerBenutzer){ app.innerHTML=renderLogin(); return; }
+  if(!darf(state.ansicht)){ const p=permsForUser(state.aktuellerBenutzer); state.ansicht=p[0]||null; }
+  switch(state.ansicht){
+    case 'empfang':     app.innerHTML=renderEmpfang(); break;
+    case 'checkin':     app.innerHTML=renderKiosk(); break;
+    case 'raum':        app.innerHTML=renderRaum(); break;
+    case 'anzeige':     app.innerHTML=renderAnzeige(); break;
+    case 'beschwerden': app.innerHTML=renderBeschwerden(); break;
+    case 'auswertung':  app.innerHTML=renderAuswertung(); break;
+    case 'datenschutz': app.innerHTML=renderDatenschutz(); break;
+    case 'verwaltung':  app.innerHTML=renderVerwaltung(); break;
+    default:            app.innerHTML='<div class="leer karte">Für dieses Konto sind keine Bereiche freigeschaltet – bitte an die Leitung wenden.</div>';
+  }
+}
+
+/* ============================================================
+   MODALE: Termin, Datenschutzhinweis, Hilfe
+   ============================================================ */
+function schliesseModal(){ document.getElementById('modalWurzel').innerHTML=''; }
+
+function oeffneTerminModal(id, opt){
+  opt=opt||{};
+  const t=id?state.termine.find(t=>t.id===id):null;
+  const behOpt=()=>state.behandler.map(x=>'<option value="'+x.id+'"'+((t?t.behandlerId:(state.behandler[0]||{}).id)===x.id?' selected':'')+'>'+esc(x.name)+'</option>').join('');
+  const raumOpt=()=>state.raeume.map(x=>'<option value="'+x.id+'"'+((t?t.raumId:(state.raeume[0]||{}).id)===x.id?' selected':'')+'>'+esc(x.name)+'</option>').join('');
+  const startStatus=t?t.status:(opt.notfall?'anwesend':'geplant');
+  const stOpt=()=>Object.entries(STATUS_TEXT).map(([k,v])=>'<option value="'+k+'"'+(startStatus===k?' selected':'')+'>'+v+'</option>').join('');
+  document.getElementById('modalWurzel').innerHTML=`
+  <div class="modal-hg" onclick="if(event.target===this)schliesseModal()">
+    <div class="modal">
+      <h2>${t?'Termin bearbeiten':(opt.notfall?'🚨 Notfall / Patient ohne Termin aufnehmen':'Neuen Termin anlegen')}</h2>
+      ${opt.notfall?'<p style="color:var(--text2);font-size:14px;margin-bottom:12px">Wird sofort als „wartet" und „dringend" aufgenommen und beim nächsten Aufruf vorgezogen.</p>':''}
+      <div class="feld"><label>Patientenname</label><input id="m_name" value="${t?esc(t.patient.name):''}" placeholder="Vorname Nachname"></div>
+      <div class="feld"><label>Geburtsdatum (für Kiosk-Bestätigung)</label><input id="m_geb" value="${t?esc(t.patient.geburtsdatum):''}" placeholder="TT.MM.JJJJ"></div>
+      <div class="raster raster-2">
+        <div class="feld"><label>Uhrzeit</label><input id="m_zeit" type="time" value="${t?hhmm(t.zeit):hhmm(opt.notfall?jetzt():minAb(30))}"></div>
+        <div class="feld"><label>Dauer (Minuten)</label><input id="m_dauer" type="number" min="5" step="5" value="${t?t.dauer:(opt.notfall?20:30)}"></div>
+        <div class="feld"><label>Raum</label><select id="m_raum">${raumOpt()}</select></div>
+        <div class="feld"><label>Behandler</label><select id="m_beh">${behOpt()}</select></div>
+      </div>
+      <div class="feld"><label>Behandlungsart</label><input id="m_art" value="${t?esc(t.behandlungsart):(opt.notfall?'Akutbehandlung':'Krankengymnastik')}"></div>
+      <div class="raster raster-2">
+        <div class="feld"><label>Status</label><select id="m_status">${stOpt()}</select></div>
+        <div class="feld"><label>Priorität</label><select id="m_dringend">
+          <option value="0" ${(t?!t.dringend:!opt.notfall)?'selected':''}>normal</option>
+          <option value="1" ${(t?t.dringend:opt.notfall)?'selected':''}>dringend (wird vorgezogen)</option></select></div>
+      </div>
+      ${t&&t.kioskGesperrt?'<div class="feld"><label>Kiosk-Sperre (3× falsches Geburtsdatum)</label><button class="btn klein" onclick="kioskEntsperren(\''+t.id+'\')">Kiosk-Check-in wieder freigeben</button></div>':''}
+      <div class="fuss-knoepfe">
+        ${t?'<button class="btn gefahr" onclick="terminLoeschen(\''+t.id+'\')">Termin löschen</button>':''}
+        <button class="btn" onclick="schliesseModal()">Abbrechen</button>
+        <button class="btn primaer" onclick="terminSpeichern(${t?'\''+t.id+'\'':'null'})">Speichern</button>
+      </div>
+    </div>
+  </div>`;
+}
+function kioskEntsperren(id){ const t=state.termine.find(t=>t.id===id); if(t){ t.kioskGesperrt=false; t.kioskVersuche=0; logEintrag('Empfang: Kiosk-Sperre für '+anzeigeName(t)+' aufgehoben.'); schliesseModal(); renderAlles(); } }
+function terminSpeichern(id){
+  const g=x=>document.getElementById(x).value;
+  const name=g('m_name').trim()||'Unbenannt';
+  const [h,m]=g('m_zeit').split(':').map(Number);
+  const zeit=new Date(); zeit.setHours(h,m,0,0);
+  const dringend=g('m_dringend')==='1';
+  if(id){
+    const t=state.termine.find(t=>t.id===id);
+    Object.assign(t,{behandlerId:g('m_beh'), raumId:g('m_raum'), zeit, dauer:+g('m_dauer')||30, behandlungsart:g('m_art'), status:g('m_status'), dringend});
+    t.patient.name=name; t.patient.initialen=initialen(name); t.patient.geburtsdatum=g('m_geb');
+    if(t.status==='anwesend'&&!t.checkinZeit)t.checkinZeit=jetzt();
+    logEintrag('Empfang: Termin '+hhmm(zeit)+' ('+t.patient.initialen+') geändert.');
+  } else {
+    idZaehler++;
+    const t={id:'t'+idZaehler, nummer:'A'+String(idZaehler-100).padStart(2,'0'),
+      patient:{name, initialen:initialen(name), geburtsdatum:g('m_geb')},
+      behandlerId:g('m_beh'), raumId:g('m_raum'), zeit, dauer:+g('m_dauer')||30,
+      behandlungsart:g('m_art'), status:g('m_status'), dringend,
+      checkinZeit:g('m_status')!=='geplant'?jetzt():null, aufrufZeit:null,
+      kioskVersuche:0, kioskGesperrt:false, anonymisiert:false};
+    state.termine.push(t);
+    logEintrag('Empfang: '+(dringend?'Dringende Aufnahme':'Neuer Termin')+' '+hhmm(zeit)+' ('+t.patient.initialen+').');
+  }
+  schliesseModal(); renderAlles();
+}
+function terminLoeschen(id){
+  const t=state.termine.find(t=>t.id===id);
+  state.termine=state.termine.filter(x=>x.id!==id);
+  state.aufrufe=state.aufrufe.filter(a=>a.terminId!==id);
+  logEintrag('Empfang: Termin ('+(t?t.patient.initialen:'?')+') gelöscht.');
+  schliesseModal(); renderAlles();
+}
+
+function oeffneDatenschutz(){
+  document.getElementById('modalWurzel').innerHTML=`
+  <div class="modal-hg" onclick="if(event.target===this)schliesseModal()">
+    <div class="modal">
+      <h2>Datenschutzhinweis</h2>
+      <div class="hilfe-abschnitt"><p>
+      Beim Self-Check-in wird nur Ihr Anwesenheitsstatus zum heutigen Termin erfasst. Ihr Geburtsdatum dient ausschließlich der Bestätigung Ihrer Identität und wird nicht angezeigt. Auf der öffentlichen Wartebereich-Anzeige erscheinen niemals volle Namen – nur Initialen oder eine Aufrufnummer. Medizinische Daten werden an diesem Gerät weder angezeigt noch erfasst. Anwesenheitsdaten werden nur so lange aufbewahrt wie nötig und anschließend anonymisiert bzw. gelöscht. Verantwortlich ist die Praxisleitung; bei Fragen wenden Sie sich bitte an den Empfang.<br><br>
+      <i>Hinweis: Dies ist ein Demo-Prototyp mit Beispieldaten – es werden keinerlei echte Daten gespeichert oder übertragen.</i></p></div>
+      <div class="fuss-knoepfe"><button class="btn primaer" onclick="schliesseModal()">Verstanden</button></div>
+    </div>
+  </div>`;
+}
+
+/* ---------- Hilfe (?-Symbol oben rechts): alles erklärt ---------- */
+function oeffneHilfe(){
+  document.getElementById('modalWurzel').innerHTML=`
+  <div class="modal-hg" onclick="if(event.target===this)schliesseModal()">
+    <div class="modal">
+      <h2>So funktioniert PraxisDesk</h2>
+      <div class="hilfe-abschnitt"><h3>💡 Die Idee</h3>
+        <p>Patienten checken selbst ein, jeder Raum sieht seinen Tagesplan, der Empfang behält alles im Blick. Alle Ansichten teilen denselben Live-Zustand – jede Änderung ist sofort überall sichtbar.</p></div>
+      <div class="hilfe-abschnitt"><h3>🔑 Anmeldung & Rollen (wer sieht was)</h3>
+        <p>Man meldet sich mit <b>Benutzername + Passwort</b> an. Welches Konto man nutzt, bestimmt, welche Bereiche man sieht: Das <b>Check-in-Tablet</b> sieht nur den Check-in, das <b>Anzeige-Display</b> nur die Wartebereich-Anzeige, ein <b>Behandler-Konto</b> nur sein Raum-Display (sogar fest an einen Raum gebunden) – niemand sieht mehr, als er braucht. Nur die <b>Leitung</b> sieht alles.<br><br>
+        Demo-Zugänge: <span class="mono">leitung/chef123 · empfang/empfang123 · raum1/raum123 · kiosk/kiosk123 · anzeige/anzeige123</span></p></div>
+      <div class="hilfe-abschnitt"><h3>🛠 Verwaltung: alles selbst einstellbar</h3>
+        <p>Als Leitung im Reiter <b>Verwaltung</b>: <b>Konten</b> anlegen/bearbeiten/löschen (Anzeigename, Benutzername, Passwort, Rolle, optional fester Raum), <b>eigene Rollen</b> mit frei wählbaren Bereichen per Häkchen erstellen, <b>Praxisname</b>, <b>Anzeige-Modus</b> (Initialen/Nummer), <b>Räume und Behandler</b> umbenennen, hinzufügen oder entfernen, <b>Behandler-Ausfall</b> („krank →": alle offenen Termine übertragen) und das <b>eigene Passwort</b> ändern.</p></div>
+      <div class="hilfe-abschnitt"><h3>🧭 Die Bereiche</h3>
+        <p><b>Empfang:</b> Alle Räume mit Verzögerungs-Ampel, alle Termine (antippen = bearbeiten!), Notfall-Aufnahme, manueller Check-in, Sichtschutz-Knopf.<br>
+        <b>Check-in:</b> Patient tippt seinen Namen an und muss sein <b>Geburtsdatum eingeben</b> – niemand kann andere einchecken; nach 3 Fehlversuchen Sperre. Außerdem: Feedback/Beschwerde abgeben (auch anonym) und Datenschutzhinweis.<br>
+        <b>Raum:</b> „Nächsten aufrufen" schließt die laufende Behandlung ab und ruft den nächsten Eingecheckten auf – dringende Patienten werden vorgezogen.<br>
+        <b>Wartebereich:</b> Anonymisierte Aufrufe („M. F. → Raum 2"), nie volle Namen; pausierbar.<br>
+        <b>Beschwerden:</b> Alle Rückmeldungen mit Status offen → in Bearbeitung → erledigt.<br>
+        <b>Auswertung:</b> Wartezeit, No-Show-Quote, Verzug, Auslastung je Raum.<br>
+        <b>Datenschutz:</b> Anonymisieren, Log löschen, datensparsames Ereignis-Log.</p></div>
+      <div class="hilfe-abschnitt"><h3>🚦 Status, Ampel & Sonderfälle</h3>
+        <p>Termin-Ablauf: <b>geplant → wartet → in Behandlung → abgeschlossen</b>. 20 Min nach Terminzeit ohne Check-in: automatisch „nicht erschienen". Ampel je Raum: Grün = im Plan, Gelb = bis 15 Min, Rot = über 15 Min Verzug.</p></div>
+      <div class="hilfe-abschnitt"><h3>🧪 Demo</h3>
+        <p>Alles sind Beispieldaten, nichts wird gespeichert oder übertragen – Neuladen setzt alles zurück (auch neue Konten). Ein Raum ist absichtlich im Verzug, ein Notfall wartet, eine Beschwerde ist in Bearbeitung.</p></div>
+      <div class="fuss-knoepfe"><button class="btn primaer" onclick="schliesseModal()">Alles klar!</button></div>
+    </div>
+  </div>`;
+}
+
+/* ---------- Uhr & Automatik ---------- */
+function tick(){ document.getElementById('uhr').textContent=jetzt().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+setInterval(tick,1000);
+setInterval(()=>{ autoNoShow(); if(state.aktuellerBenutzer&&['empfang','raum','auswertung'].includes(state.ansicht)) renderAlles(); },30000);
+
+/* ---------- Start ---------- */
+demoDatenLaden();
+tick();
+renderAlles();
+
+/* ============================================================
+   GETROFFENE ANNAHMEN (v3)
+   1. Rollen-System nach dem Referenzprojekt: Anmeldung mit
+      Benutzername/Passwort; Chef sieht alles; Konten haben eine
+      Standard-Rolle ODER eine frei definierte eigene Rolle mit
+      per Häkchen gewählten Bereichen. Geräte-Konten (Kiosk,
+      Anzeige) sehen nur ihren einen Bereich.
+   2. Behandler-Konten können fest an einen Raum gebunden werden –
+      dann ist keine Raumauswahl möglich (Datenschutz: nur der
+      eigene Plan ist sichtbar).
+   3. Passwörter liegen im Demo-Prototyp sichtbar im Speicher; im
+      Echtbetrieb: sichere Authentifizierung (z. B. wie im
+      Referenzprojekt über einen Auth-Dienst), verschlüsselt.
+   4. Kiosk-Identitätsprüfung per eingegebenem Geburtsdatum,
+      3 Fehlversuche → Sperre, Aufhebung nur über den Empfang.
+   5. Dringende Patienten (Notfälle) werden je Raum vor allen
+      anderen aufgerufen; No-Show automatisch nach 20 Minuten.
+   6. Räume/Behandler mit offenen Terminen können nicht gelöscht
+      werden (erst verschieben bzw. „krank →" nutzen).
+   7. Neuladen der Seite setzt alles zurück – gewollt (Demo, keine
+      Speicherung, kein localStorage laut Spezifikation).
+
+   5 AUSBAU-IDEEN FÜR VERSION 2+
+   1. Echte Authentifizierung mit verschlüsselten Passwörtern,
+      Sitzungen je Gerät und „alle Geräte abmelden" (wie im
+      Referenzprojekt), plus Audit-Log gemäß DSGVO.
+   2. Anbindung an bestehende Praxissoftware (GDT/HL7-FHIR) für
+      Termin-Import/-Export ohne Doppelpflege.
+   3. Terminserien (z. B. 10er-Reihe Physio) mit Einzelabsage.
+   4. SMS-/E-Mail-Erinnerungen und Warteschlangen-Status auf dem
+      Patienten-Handy („Sie sind in ca. 10 Min dran").
+   5. Auswertungs-Dashboard mit Wochen-/Monatstrends inkl.
+      Beschwerde-Themen und Tagesabschluss-Archiv.
+   ============================================================ */
+</script>
+</body>
+</html>

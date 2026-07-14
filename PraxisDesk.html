@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PraxisDesk - DEMO-VERSION</title>
+<meta name="description" content="PraxisDesk - Demo-Version einer APPWERK Mini-App. Beispieldaten, keine Anmeldung, keine Speicherung.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   APPWERK · GEMEINSAMES DESIGN-SYSTEM  v2.0  "BELEG"
+   Zeichengleich in ALLEN Demo-Apps.
+
+   Grundgedanke: Jede dieser Mini-Apps ersetzt einen Zettel -
+   Bon, Laufzettel, Auftragszettel, Kommissionierschein.
+   Deshalb: dunkler Flaschengruen-Grund, darauf Creme-Belege
+   mit Perforationskante, gestrichelte Trennlinien, Messing als
+   einziger Marken-Akzent. Keine Verlaeufe, keine bunten
+   Flaechen, Farbe nur dort wo sie etwas bedeutet.
+
+   Schrift: Fraunces (Serife, Ueberschriften) · Instrument Sans
+   (Fliesstext) · IBM Plex Mono (Zahlen, Zeiten, Belegkoepfe).
+   ============================================================ */
+:root{
+  /* Grund (dunkles Flaschengruen) */
+  --canvas:#0F2A23; --canvas2:#17362C; --canvas3:#0A1F1A;
+  /* Papier */
+  --paper:#FBF7EC; --steel:#F1ECDD;
+  /* Tinte */
+  --ink:#202B25; --mut:#6C7268;
+  /* Akzente – gedeckt, sparsam */
+  --brass:#C29B4B; --paprika:#C6472A; --herb:#2E7A55; --amber:#A97C15; --blue:#2F608C;
+  --cream:#F6F1E3; --creammut:#9FB4A8;
+
+  /* Bezeichner der Bausteine (von allen Apps benutzt) */
+  --grund:#F4EFE1; --flaeche:var(--paper); --getoent:var(--steel);
+  --linie:#DCD3BD; --linie-stark:#C6BAA0;
+  --text:var(--ink); --text2:var(--mut); --text3:#9AA096;
+  --kobalt:var(--blue); --violett:#8A6A22; --verlauf:var(--paprika);
+  --warn:var(--paprika);   --warn-bg:#F7E7DD;
+  --arbeit:var(--amber);   --arbeit-bg:#F8F1DC;
+  --fertig:var(--herb);    --fertig-bg:#E9F1E6;
+  --info:var(--blue);      --info-bg:#E8EEF0;
+  --lila:#8A6A22;          --lila-bg:#F2EAD8;
+  --radius:4px; --radius-s:8px; --radius-xs:8px;
+  --schatten:0 1px 2px rgba(7,17,13,.22);
+  --schatten-tief:0 22px 50px rgba(7,17,13,.45);
+  --f-kopf:'Fraunces','Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+  --f-text:'Instrument Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--f-text);font-size:15px;line-height:1.5;color:var(--ink);min-height:100vh;
+  background:radial-gradient(1200px 600px at 50% -140px, var(--canvas2), var(--canvas) 62%) fixed var(--canvas);
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:var(--f-kopf);font-weight:700;letter-spacing:.005em;line-height:1.25;color:var(--ink)}
+.mono{font-family:var(--f-mono)}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+::selection{background:var(--brass);color:#231A06}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:rgba(246,241,227,.22);border-radius:99px;border:3px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- Demo-Kennzeichnung ---------- */
+.demo-band{position:relative;z-index:60;background:var(--canvas3);color:var(--creammut);text-align:center;
+  font-family:var(--f-mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  padding:7px 14px;border-bottom:1px solid rgba(246,241,227,.10)}
+.demo-chip{font-family:var(--f-mono);font-size:9.5px;font-weight:600;letter-spacing:.16em;
+  color:var(--brass);border:1px solid rgba(194,155,75,.55);border-radius:999px;padding:3px 8px;white-space:nowrap}
+.wasserzeichen{position:fixed;right:14px;bottom:14px;z-index:40;pointer-events:none;
+  font-family:var(--f-mono);font-size:9.5px;letter-spacing:.16em;color:var(--brass);
+  background:rgba(10,31,26,.85);border:1px solid rgba(194,155,75,.4);border-radius:999px;padding:5px 11px}
+.demo-hinweis{background:var(--steel);border:1px dashed var(--linie-stark);border-radius:var(--radius);
+  padding:11px 13px;font-size:12.5px;color:var(--mut);line-height:1.55}
+.demo-hinweis b{color:var(--ink)}
+
+/* ---------- Kopfleiste (auf dem dunklen Grund) ---------- */
+.kopf{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:12px 20px;background:rgba(15,42,35,.94);backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);border-bottom:1px solid rgba(246,241,227,.14)}
+.marke{display:flex;align-items:center;gap:10px}
+.marke-zeichen{width:34px;height:34px;border-radius:8px;background:var(--canvas3);display:grid;place-items:center;
+  color:var(--cream);flex:none;border:1.5px solid var(--brass)}
+.marke-name{display:block;font-family:var(--f-kopf);font-weight:700;font-size:19px;color:var(--cream);
+  letter-spacing:.01em;line-height:1.15}
+.marke-unter{display:block;font-size:11px;color:var(--creammut)}
+.nav{display:flex;gap:2px;flex-wrap:wrap;margin-left:auto}
+.tab{position:relative;padding:8px 12px;font-family:var(--f-kopf);font-weight:600;font-size:14px;
+  letter-spacing:.02em;color:var(--creammut);white-space:nowrap;border-radius:6px}
+.tab:hover{color:var(--cream)}
+.tab.aktiv{color:var(--brass)}
+.tab.aktiv::after{content:"";position:absolute;left:12px;right:12px;bottom:1px;height:2px;background:var(--brass)}
+.kopf-rechts{display:flex;align-items:center;gap:8px}
+.uhr{font-family:var(--f-mono);font-size:12.5px;color:var(--cream);background:rgba(246,241,227,.07);
+  border:1px solid rgba(246,241,227,.16);border-radius:999px;padding:6px 11px;white-space:nowrap}
+.ikon{width:36px;height:36px;border-radius:8px;border:1px solid rgba(246,241,227,.22);background:transparent;
+  color:var(--cream);font-family:var(--f-kopf);font-weight:700;font-size:15px;display:grid;place-items:center;
+  flex:none;transition:border-color .15s, background .15s}
+.ikon:hover{border-color:var(--brass);color:var(--brass)}
+.ikon.primaer{background:var(--brass);border-color:var(--brass);color:#231A06}
+.ikon.primaer:hover{background:#D2AC5F;color:#231A06}
+
+/* ---------- Buehne & Fuss ---------- */
+.buehne{max-width:1260px;margin:0 auto;padding:24px 20px 70px}
+.fuss{text-align:center;color:var(--creammut);font-size:11.5px;padding:6px 20px 46px;line-height:1.9;
+  font-family:var(--f-mono);letter-spacing:.03em}
+.fuss b{color:var(--brass)}
+
+/* ---------- Raster ---------- */
+.raster{display:grid;gap:16px}
+.r2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.r3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.r4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.zwei-spalten{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+
+/* ---------- Der Beleg (Karte) ---------- */
+.karte{position:relative;background:var(--paper);border:1px solid var(--linie);border-radius:var(--radius);
+  box-shadow:var(--schatten);padding:20px 16px 16px;animation:gleiten .3s ease both}
+.karte::before{content:"";position:absolute;left:0;right:0;top:0;height:7px;pointer-events:none;
+  background:radial-gradient(circle at 8px 0, var(--hinter,var(--canvas)) 5px, transparent 5.5px);
+  background-size:16px 7px;background-repeat:repeat-x}
+.karte.still{animation:none}
+.karte.glatt{padding-top:16px}
+.karte.glatt::before{display:none}
+.karte-kopf{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;
+  padding-bottom:9px;border-bottom:1px dashed var(--ink)}
+.karte-kopf h3{font-family:var(--f-mono);font-size:12px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink);flex:1;min-width:110px}
+.karte-kopf h3 .hinweis,.karte-kopf h3 input{font-family:var(--f-text);text-transform:none;letter-spacing:0}
+.zaehler{font-family:var(--f-mono);font-size:11.5px;color:var(--mut);letter-spacing:.04em}
+.trenner{height:1px;background:var(--linie);margin:12px 0}
+
+/* ---------- Abschnitts-Titel (auf dem dunklen Grund) ---------- */
+.abschnitt{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:28px 0 14px}
+.abschnitt:first-child{margin-top:0}
+.abschnitt h2{font-size:25px;color:var(--cream)}
+.abschnitt h3{font-size:18px;color:var(--cream)}
+.abschnitt .hinweis{color:var(--creammut)}
+.eyebrow{display:block;font-family:var(--f-mono);font-size:10px;font-weight:500;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--brass);margin-bottom:4px}
+.karte .eyebrow,.modal .eyebrow{color:var(--blue)}
+.hinweis{font-size:12.5px;color:var(--mut)}
+.aktionen{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* ---------- Knoepfe ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 15px;
+  border-radius:var(--radius-s);border:1px solid var(--linie);background:var(--paper);color:var(--ink);
+  font-size:13.5px;font-weight:600;text-align:center;transition:background .15s, border-color .15s, color .15s}
+.btn:hover{background:var(--steel);border-color:var(--linie-stark)}
+.btn:active{transform:translateY(1px)}
+.btn.primaer{background:var(--paprika);border-color:var(--paprika);color:#fff;
+  font-family:var(--f-kopf);font-weight:700;letter-spacing:.03em}
+.btn.primaer:hover{background:#B23D22;border-color:#B23D22}
+.btn.gruen{background:var(--herb);border-color:var(--herb);color:#fff;
+  font-family:var(--f-kopf);font-weight:700;letter-spacing:.03em}
+.btn.gruen:hover{background:#26684899}
+.btn.gefahr{background:transparent;color:var(--paprika);border-color:var(--paprika)}
+.btn.gefahr:hover{background:var(--warn-bg)}
+.btn.klein{padding:5px 11px;font-size:12px;border-radius:999px;font-family:var(--f-text);
+  font-weight:600;letter-spacing:0}
+.btn.gross{width:100%;padding:13px;font-size:15px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* ---------- Status-Chips (gedeckt, Bedeutung ueberall gleich) ---------- */
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;
+  font-size:11.5px;font-weight:600;white-space:nowrap;background:var(--steel);color:var(--mut)}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.chip.ohne::before{display:none}
+.chip.info{background:var(--info-bg);color:var(--blue)}
+.chip.arbeit{background:var(--arbeit-bg);color:var(--amber)}
+.chip.fertig{background:var(--fertig-bg);color:var(--herb)}
+.chip.warn{background:var(--warn-bg);color:var(--paprika)}
+.chip.lila{background:var(--lila-bg);color:var(--lila)}
+.chip.voll{background:var(--paprika);color:#fff}
+
+/* ---------- Ampel ---------- */
+.ampel{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.ampel.gruen{background:var(--herb);box-shadow:0 0 0 3px var(--fertig-bg)}
+.ampel.gelb{background:var(--amber);box-shadow:0 0 0 3px var(--arbeit-bg)}
+.ampel.rot{background:var(--paprika);box-shadow:0 0 0 3px var(--warn-bg);animation:pulsring 1.8s infinite}
+
+/* ---------- Kennzahlen (klein und ruhig) ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.kpi{background:var(--paper);border:1px solid var(--linie);border-radius:var(--radius);
+  padding:11px 13px;box-shadow:var(--schatten)}
+.kpi .label{font-family:var(--f-mono);font-size:9.5px;font-weight:500;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--mut)}
+.kpi .wert{font-family:var(--f-mono);font-weight:600;font-size:21px;line-height:1.2;margin-top:5px;color:var(--ink)}
+.kpi .wert small{font-size:12px;color:var(--mut)}
+.kpi .unter{font-size:11.5px;color:var(--mut);margin-top:2px}
+.kpi.warnung .wert{color:var(--paprika)}
+.kpi.gut .wert{color:var(--herb)}
+
+/* ---------- Zeilen ---------- */
+.zeile{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px dotted var(--linie);flex-wrap:wrap}
+.zeile:last-child{border-bottom:none}
+.zeile.klick{cursor:pointer;border-radius:var(--radius);transition:background .12s}
+.zeile.klick:hover{background:var(--steel)}
+.zeile .zeit{font-family:var(--f-mono);font-size:12.5px;color:var(--mut);flex:none}
+.zeile .name{font-weight:600;flex:1;min-width:110px}
+.zeile .meta{font-size:12.5px;color:var(--mut)}
+
+/* ---------- Leere Zustaende ---------- */
+.leer{text-align:center;color:var(--mut);padding:24px 16px;font-size:13px;line-height:1.6;
+  background:var(--steel);border:1px dashed var(--linie-stark);border-radius:var(--radius)}
+.leer b{display:block;font-family:var(--f-kopf);font-size:15px;color:var(--ink);margin-bottom:4px}
+
+/* ---------- Fortschritt ---------- */
+.fortschritt{height:7px;background:var(--steel);border-radius:99px;overflow:hidden;border:1px solid var(--linie)}
+.fortschritt>i{display:block;height:100%;background:var(--brass);transition:width .5s ease}
+.fortschritt.ueber>i{background:var(--paprika)}
+.fortschritt.fertig>i{background:var(--herb)}
+.spur-kopf{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--mut);margin-bottom:5px}
+.balken-zeile{display:flex;align-items:center;gap:10px;margin:7px 0;font-size:12.5px}
+.balken-zeile .bz-name{width:120px;flex:none;color:var(--mut)}
+.balken-zeile .bz-wert{font-family:var(--f-mono);font-size:11.5px;width:64px;text-align:right;flex:none}
+
+/* ---------- Formulare ---------- */
+.feld{margin-bottom:12px}
+.feld label,label.lbl{display:block;font-family:var(--f-mono);font-size:10px;font-weight:500;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--mut);margin-bottom:5px}
+input,select,textarea{width:100%;font-family:var(--f-text);font-size:14px;padding:9px 11px;
+  border:1px solid var(--linie);border-radius:var(--radius-s);background:var(--grund);color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 3px rgba(194,155,75,.22)}
+textarea{min-height:76px;resize:vertical}
+.feld-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.schmal{width:auto;min-width:130px}
+.haken{display:flex;align-items:center;gap:9px;font-family:var(--f-text);font-size:14px;font-weight:500;
+  text-transform:none;letter-spacing:0;color:var(--ink);padding:7px 0;cursor:pointer}
+.haken input{width:17px;height:17px;accent-color:var(--herb)}
+.fehler{color:var(--paprika);font-weight:600;font-size:13px;min-height:18px}
+.erfolg{color:var(--herb);font-weight:600;font-size:13px}
+.einst-zeile{display:flex;gap:8px;align-items:center;margin-bottom:7px}
+.einst-zeile input,.einst-zeile select{flex:1;min-width:0}
+.regel-zeile{display:flex;align-items:center;gap:14px;padding:12px 2px;border-bottom:1px dotted var(--linie)}
+.regel-zeile:last-child{border-bottom:none}
+.regel-zeile .rz-info{flex:1}
+.regel-zeile .rz-name{font-weight:600;font-size:14px}
+.regel-zeile .rz-text{font-size:12.5px;color:var(--mut);margin-top:2px;line-height:1.45}
+.regel-zeile input[type=number]{width:92px;text-align:center;font-family:var(--f-mono)}
+.regel-zeile input[type=text],.regel-zeile select{width:190px}
+
+/* ---------- Unter-Reiter ---------- */
+.untertabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.untertab{border:1px solid var(--linie);background:var(--paper);border-radius:999px;padding:6px 13px;
+  font-size:12.5px;font-weight:600;color:var(--mut);position:relative}
+.untertab:hover{border-color:var(--brass);color:var(--ink)}
+.untertab.aktiv{background:var(--brass);border-color:var(--brass);color:#231A06}
+.untertab .punkt{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;
+  background:var(--paprika);border:2px solid var(--canvas)}
+
+/* ---------- Ereignis-Log ---------- */
+.log{max-height:330px;overflow-y:auto;padding-right:4px}
+.log-eintrag{display:flex;gap:9px;font-size:12.5px;color:var(--mut);padding:6px 2px;
+  border-bottom:1px dotted var(--linie);line-height:1.45}
+.log-eintrag:last-child{border-bottom:none}
+.log-zeit{font-family:var(--f-mono);font-size:11px;color:var(--blue);flex:none;padding-top:1px}
+.log-wer{color:var(--ink);font-weight:600}
+
+/* ---------- Modal ---------- */
+.modal-hg{position:fixed;inset:0;z-index:100;background:rgba(7,17,13,.62);backdrop-filter:blur(3px);
+  -webkit-backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{position:relative;background:var(--paper);border:1px solid var(--linie);border-radius:10px;
+  box-shadow:var(--schatten-tief);padding:22px;width:min(520px,100%);max-height:88vh;overflow-y:auto;
+  animation:gleiten .22s ease both}
+.modal.gross{width:min(760px,100%)}
+.modal h2{font-size:21px;margin:0 0 12px;padding-bottom:10px;border-bottom:1px dashed var(--ink)}
+.modal-fuss{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px;
+  padding-top:14px;border-top:1px dashed var(--linie)}
+.modal-block{border-top:1px dotted var(--linie);padding-top:14px;margin-top:14px}
+.modal-block h3{font-family:var(--f-mono);font-size:11.5px;font-weight:600;letter-spacing:.09em;
+  text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.fliess{font-size:13.5px;color:var(--mut);line-height:1.65}
+.fliess b{color:var(--ink)}
+.fliess+.fliess{margin-top:8px}
+.hilfe-block{margin-bottom:16px}
+.hilfe-block h3{font-family:var(--f-kopf);font-size:15px;margin-bottom:5px;text-transform:none;letter-spacing:0}
+.hilfe-block p,.hilfe-block li{font-size:13.5px;color:var(--mut);line-height:1.65}
+.hilfe-block ul{padding-left:18px;margin-top:4px}
+.hilfe-block b{color:var(--ink)}
+
+/* ---------- Bewegung ---------- */
+@keyframes gleiten{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes pulsring{0%{box-shadow:0 0 0 0 rgba(198,71,42,.45)}100%{box-shadow:0 0 0 12px rgba(198,71,42,0)}}
+.puls{animation:pulsring .9s ease-out 2}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- Klein ---------- */
+@media(max-width:900px){
+  .kopf{padding:10px 14px;gap:10px}
+  .marke-unter{display:none}
+  .nav{order:5;width:100%;margin-left:0;justify-content:flex-start;overflow-x:auto}
+  .kopf-rechts{margin-left:auto}
+  .buehne{padding:18px 14px 70px}
+  .zwei-spalten{grid-template-columns:1fr}
+  .feld-2{grid-template-columns:1fr}
+  .regel-zeile{flex-wrap:wrap}
+  .regel-zeile .rz-info{flex-basis:100%}
+  .abschnitt h2{font-size:22px}
+}
+
+/* ---------- Nur PraxisDesk: Kiosk & oeffentliche Anzeige ---------- */
+.raum-kopf{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.raum-kopf h3{flex:1;font-size:16px}
+.frei-ab{font-family:var(--f-mono);font-size:11.5px;color:var(--kobalt);background:var(--getoent);
+  padding:4px 10px;border-radius:999px;white-space:nowrap}
+
+.kiosk{max-width:660px;margin:0 auto;text-align:center}
+.kiosk h1{font-size:clamp(26px,5vw,38px);margin:14px 0 6px}
+.kiosk .unter{color:var(--text2);font-size:17px;margin-bottom:22px}
+.wahl{display:grid;gap:14px;max-width:520px;margin:0 auto}
+.wahl button{display:flex;align-items:center;gap:16px;text-align:left;padding:20px 22px;border-radius:var(--radius);
+  background:var(--flaeche);border:1.5px solid var(--linie);box-shadow:var(--schatten);font-size:18px;font-weight:600;
+  transition:transform .15s, border-color .15s}
+.wahl button:hover{transform:translateY(-2px);border-color:var(--kobalt)}
+.wahl .ikn{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;font-size:24px;flex:none;
+  background:var(--brass);color:#fff;box-shadow:0 10px 20px -10px rgba(32,43,37,.16)}
+.wahl .ikn.zart{background:var(--getoent);color:var(--kobalt);box-shadow:none}
+.wahl small{display:block;font-size:13px;font-weight:400;color:var(--text2);margin-top:3px}
+.kiosk-taste{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:18px 22px;
+  margin-bottom:12px;border-radius:var(--radius);background:var(--flaeche);border:1.5px solid var(--linie);
+  box-shadow:var(--schatten);font-size:20px;font-weight:600;text-align:left;transition:transform .15s,border-color .15s}
+.kiosk-taste:hover{border-color:var(--kobalt);transform:translateY(-2px)}
+.kiosk-taste .kt-zeit{font-family:var(--f-mono);font-size:14px;color:var(--kobalt);background:var(--getoent);
+  padding:5px 11px;border-radius:999px;white-space:nowrap}
+.kiosk-taste.gesperrt{opacity:.55;cursor:not-allowed;transform:none}
+.kiosk-taste.gesperrt .kt-zeit{color:var(--warn);background:var(--warn-bg)}
+.willkommen{padding:48px 24px}
+.willkommen .haken{font-size:56px;display:inline-flex;width:100px;height:100px;border-radius:50%;
+  background:var(--getoent);align-items:center;justify-content:center;margin-bottom:8px}
+.ziffernblock{display:grid;grid-template-columns:repeat(3,66px);gap:11px;justify-content:center;margin:20px auto}
+.ziffer{width:66px;height:66px;font-size:23px;font-family:var(--f-mono);font-weight:600;border:1.5px solid var(--linie);
+  border-radius:50%;background:var(--flaeche);box-shadow:var(--schatten);transition:transform .1s, background .1s}
+.ziffer:hover{background:var(--getoent);border-color:var(--kobalt)}
+.ziffer:active{transform:scale(.92)}
+.ziffer.ok{background:var(--brass);color:#fff;border-color:transparent}
+.geb-slots{display:flex;gap:6px;justify-content:center;align-items:center;margin:14px 0 4px;flex-wrap:wrap}
+.geb-slots .slot{width:33px;height:46px;border:1.5px solid var(--linie);border-radius:10px;background:var(--flaeche);
+  font-family:var(--f-mono);font-size:20px;font-weight:600;display:grid;place-items:center;color:var(--text)}
+.geb-slots .slot.leer-s{color:var(--text3);font-weight:400}
+.geb-slots .slot.aktiv-s{border-color:var(--kobalt);box-shadow:0 0 0 3px rgba(194,155,75,.22)}
+.geb-slots .sep{color:var(--text2);font-weight:700;font-size:20px}
+
+.anzeige{border-radius:var(--radius);padding:30px;color:#fff;min-height:60vh;position:relative;overflow:hidden;
+  background:
+    radial-gradient(900px 420px at 80% -12%, rgba(246,241,227,.04), transparent 55%),
+    radial-gradient(700px 380px at -8% 112%, rgba(246,241,227,.03), transparent 55%),
+    var(--text);
+  box-shadow:var(--schatten-tief)}
+.anzeige .az-kopf{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:22px;flex-wrap:wrap}
+.anzeige h2{color:#fff;font-size:clamp(22px,4vw,32px)}
+.anzeige .az-uhr{font-family:var(--f-mono);font-size:clamp(20px,3.6vw,30px);color:var(--brass);font-weight:600}
+.aufruf{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:18px 24px;margin-bottom:12px;
+  font-family:var(--f-mono);font-size:clamp(18px,3.2vw,27px)}
+.aufruf .pfeil{color:var(--brass);margin:0 16px}
+.aufruf .az-zeit{font-family:var(--f-text);font-size:14px;opacity:.65;margin-left:16px}
+.aufruf.neu{background:var(--brass);border-color:transparent;box-shadow:0 18px 44px -16px rgba(0,0,0,.25);position:relative}
+.aufruf.neu::after{content:"";position:absolute;inset:-1px;border-radius:16px;border:2px solid rgba(255,255,255,.55);
+  animation:ring 1.6s ease-out infinite}
+@keyframes ring{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.035)}}
+.anzeige .az-fuss{color:var(--creammut);font-size:14px;margin-top:24px}
+@media(max-width:640px){ .ziffernblock{grid-template-columns:repeat(3,60px)} .ziffer{width:60px;height:60px} }
+
+/* ============================================================
+   Neuausrichtung auf das Beleg-System (v2)
+   ============================================================ */
+.kiosk h1{color:var(--cream)}
+.kiosk .unter{color:var(--creammut)}
+.wahl button{border:1px solid var(--linie);border-radius:var(--radius);box-shadow:var(--schatten)}
+.wahl button:hover{border-color:var(--brass);transform:none}
+.wahl .ikn{background:var(--ink);color:var(--cream);border-radius:var(--radius-s);box-shadow:none}
+.wahl .ikn.zart{background:var(--steel);color:var(--blue)}
+.kiosk-taste{border-radius:var(--radius);border:1px solid var(--linie);box-shadow:var(--schatten)}
+.kiosk-taste:hover{border-color:var(--brass);transform:none}
+.kiosk-taste .kt-zeit{color:var(--blue);background:var(--steel)}
+.willkommen .haken{background:var(--steel)}
+.ziffer{background:var(--paper);border:1px solid var(--linie);box-shadow:none}
+.ziffer:hover{background:var(--steel);border-color:var(--brass)}
+.ziffer.ok{background:var(--herb);border-color:var(--herb);color:#fff}
+.geb-slots .slot{border-radius:6px;border:1px solid var(--linie)}
+.geb-slots .slot.aktiv-s{border-color:var(--brass);box-shadow:0 0 0 3px rgba(194,155,75,.22)}
+.frei-ab{color:var(--blue);background:var(--steel)}
+
+/* Wartebereich-Anzeige: dunkelste Flaeche, Messing fuer den neuen Aufruf */
+.anzeige{background:var(--canvas3);border:1px solid rgba(246,241,227,.12);border-radius:var(--radius);
+  color:var(--cream);box-shadow:var(--schatten-tief)}
+.anzeige h2{color:var(--cream)}
+.anzeige .az-uhr{color:var(--brass)}
+.aufruf{background:rgba(246,241,227,.05);border:1px solid rgba(246,241,227,.12);border-radius:var(--radius-s);color:var(--cream)}
+.aufruf .pfeil{color:var(--brass)}
+.aufruf .az-zeit{color:var(--creammut);opacity:1}
+.aufruf.neu{background:var(--brass);border-color:var(--brass);color:#231A06;box-shadow:none}
+.aufruf.neu .pfeil{color:#3A2C0C}
+.aufruf.neu .az-zeit{color:#4A3A18}
+.aufruf.neu::after{border-color:rgba(35,26,6,.30)}
+.anzeige .az-fuss{color:var(--creammut)}
+
+</style>
+</head>
+<body>
+
+<!-- Demo-Kennzeichnung 1/4: Band ueber der gesamten Breite -->
+<div class="demo-band">Demo-Version &middot; Beispieldaten einer fiktiven Praxis &middot; keine Anmeldung &middot; nichts wird gespeichert</div>
+
+<header class="kopf">
+  <div class="marke">
+    <span class="marke-zeichen"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h3l2-5 4 10 2.5-5H21"/></svg></span>
+    <span>
+      <b class="marke-name" id="appName">PraxisDesk</b>
+      <span class="marke-unter" id="appUnter">Praxis-Steuerung</span>
+    </span>
+    <!-- Demo-Kennzeichnung 2/4: Chip neben dem Logo -->
+    <span class="demo-chip">DEMO</span>
+  </div>
+  <nav class="nav" id="nav"></nav>
+  <div class="kopf-rechts">
+    <span class="uhr mono" id="uhr">--:--:--</span>
+    <button class="ikon" onclick="oeffneEinstellungen()" title="Einstellungen" aria-label="Einstellungen">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+    </button>
+    <button class="ikon primaer" onclick="oeffneHilfe()" title="Hilfe - so funktioniert diese Demo" aria-label="Hilfe">?</button>
+  </div>
+</header>
+
+<main class="buehne" id="app"></main>
+
+<!-- Demo-Kennzeichnung 3/4: Fusszeile -->
+<footer class="fuss">
+  PraxisDesk &middot; Mini-App von APPWERK<br>
+  <b>DEMO-VERSION</b> &middot; Alle Namen, Zahlen und Vorgaenge sind Beispieldaten &middot; Kein Login, keine Konten &middot; Nichts wird gespeichert &middot; Neuladen setzt die Demo zurueck
+</footer>
+
+<!-- Demo-Kennzeichnung 4/4: dauerhaftes Wasserzeichen -->
+<div class="wasserzeichen" aria-hidden="true">DEMO-VERSION</div>
+<div id="modalWurzel"></div>
+
+<script>
+/* ============================================================
+   APPWERK · GEMEINSAME BASIS  v1.0
+   Zeichengleich in allen Demo-Apps: Helfer, Navigation, Modale,
+   Ereignis-Log, Live-Uhr, Demo-Reset. Darunter folgt die
+   Fachlogik der jeweiligen App.
+
+   DEMO-HINWEIS: Alle Daten liegen nur im Arbeitsspeicher.
+   Kein Login, keine Konten, kein Server, keine Speicherung.
+   Neuladen der Seite setzt die Demo zurueck.
+   ============================================================ */
+"use strict";
+
+const MIN = 60000, STD = 3600000, TAG = 86400000;
+const $  = (s, w = document) => w.querySelector(s);
+const $$ = (s, w = document) => Array.from(w.querySelectorAll(s));
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
+let _idZaehler = 100;
+const neueId = p => p + (_idZaehler++) + Math.random().toString(36).slice(2, 5);
+
+const hhmm     = t => new Date(t).toLocaleTimeString("de-DE", { hour:"2-digit", minute:"2-digit" });
+const hhmmss   = t => new Date(t).toLocaleTimeString("de-DE", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
+const datumLang= t => new Date(t).toLocaleDateString("de-DE", { weekday:"long", day:"2-digit", month:"long", year:"numeric" });
+const eur      = n => Number(n || 0).toFixed(2).replace(".", ",") + " €";
+const inMin    = m => Date.now() + m * MIN;
+const vorMin   = m => Date.now() - m * MIN;
+
+function dauerText(ms){
+  if (ms < 0) ms = -ms;
+  const std = Math.floor(ms / STD), min = Math.floor((ms % STD) / MIN);
+  if (ms >= TAG) return Math.floor(ms / TAG) + " Tg " + (std % 24) + " Std";
+  if (std > 0)   return std + " Std " + String(min).padStart(2, "0") + " Min";
+  return min + " Min";
+}
+function restText(ms){
+  if (ms <= 0) return "00:00";
+  const s = Math.floor(ms / 1000);
+  if (s >= 3600) return Math.floor(s / 3600) + " Std " + String(Math.floor((s % 3600) / 60)).padStart(2, "0") + " Min";
+  return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+}
+function zeitHeute(hhmmStr){
+  const [h, m] = String(hhmmStr || "00:00").split(":").map(Number);
+  const d = new Date(); d.setHours(h || 0, m || 0, 0, 0); return d.getTime();
+}
+function initialen(name){
+  const t = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!t.length) return "?";
+  return t.length > 1 ? (t[0][0] + ". " + t[t.length - 1][0] + ".") : (t[0][0] + ".");
+}
+function kuerzel(name){
+  const sauber = String(name || "").replace(/[^\p{L}\p{N} ]/gu, "").trim().split(/\s+/).filter(Boolean);
+  if (!sauber.length) return "??";
+  return (sauber.length > 1 ? sauber[0][0] + sauber[sauber.length - 1][0] : sauber[0].slice(0, 2)).toUpperCase();
+}
+
+/* ---------- Ereignis-Log (in jeder App gleich aufgebaut) ---------- */
+function loggen(text, wer){
+  state.log.unshift({ zeit: Date.now(), wer: wer || "System", text });
+  if (state.log.length > 80) state.log.pop();
+}
+function logKarte(){
+  return '<div class="karte still"><div class="karte-kopf"><h3>Ereignis-Log</h3>' +
+    '<span class="zaehler">' + state.log.length + '</span>' +
+    '<span class="hinweis">jede Aktion mit Uhrzeit</span></div><div class="log">' +
+    (state.log.length
+      ? state.log.map(l => '<div class="log-eintrag"><span class="log-zeit">' + hhmmss(l.zeit) + '</span>' +
+          '<span><b class="log-wer">' + esc(l.wer) + '</b> · ' + esc(l.text) + '</span></div>').join("")
+      : '<div class="leer">Noch keine Ereignisse in dieser Demo-Sitzung.</div>') +
+    '</div></div>';
+}
+
+/* ---------- Modale ---------- */
+function modalOeffnen(html, gross){
+  $("#modalWurzel").innerHTML =
+    '<div class="modal-hg" onclick="if(event.target===this)modalSchliessen()">' +
+    '<div class="modal' + (gross ? " gross" : "") + '" role="dialog" aria-modal="true">' + html + '</div></div>';
+  const erst = $("#modalWurzel input, #modalWurzel textarea, #modalWurzel select");
+  if (erst) erst.focus();
+}
+function modalSchliessen(){ $("#modalWurzel").innerHTML = ""; }
+function modalInfo(titel, html){
+  modalOeffnen('<h2>' + titel + '</h2><p class="fliess">' + html + '</p>' +
+    '<div class="modal-fuss"><button class="btn primaer" onclick="modalSchliessen()">Verstanden</button></div>');
+}
+let _antwort = null;
+function modalFrage(titel, html, fn, knopf){
+  _antwort = fn;
+  modalOeffnen('<h2>' + titel + '</h2><p class="fliess">' + html + '</p>' +
+    '<div class="modal-fuss"><button class="btn" onclick="modalSchliessen()">Abbrechen</button>' +
+    '<button class="btn gefahr" onclick="modalJa()">' + (knopf || "Ja, ausführen") + '</button></div>');
+}
+function modalJa(){ const f = _antwort; _antwort = null; modalSchliessen(); if (f) f(); }
+function feldWert(id){ const e = document.getElementById(id); return e ? e.value.trim() : ""; }
+function feldZahl(id, ersatz){ const e = document.getElementById(id); const n = e ? parseFloat(e.value) : NaN; return isNaN(n) ? ersatz : n; }
+
+/* ---------- Navigation (Ansichten statt Konten) ---------- */
+function navBauen(){
+  $("#nav").innerHTML = ANSICHTEN.map(a =>
+    '<button class="tab' + (state.ansicht === a.id ? " aktiv" : "") + '" onclick="wechsle(\'' + a.id + '\')">' +
+    a.label + '</button>').join("");
+}
+function wechsle(id){ state.ansicht = id; if (typeof beimWechsel === "function") beimWechsel(id); rendern(); window.scrollTo({ top:0, behavior:"instant" }); }
+
+/* ---------- Hervorhebung geaenderter Elemente ---------- */
+function puls(id){ state.puls = id; }
+function pulsAnwenden(){
+  if (!state.puls) return;
+  const el = $('[data-puls="' + state.puls + '"]');
+  if (el) el.classList.add("puls");
+  state.puls = null;
+}
+
+/* ---------- Live-Uhr ---------- */
+function uhrTick(){
+  const el = $("#uhr");
+  if (el) el.textContent = hhmmss(Date.now());
+}
+
+/* ---------- Demo zuruecksetzen (in jeder App unter Einstellungen) ---------- */
+function demoZuruecksetzen(){
+  modalFrage("Demo zurücksetzen?",
+    "Alle Änderungen dieser Sitzung gehen verloren, die Beispieldaten werden frisch geladen. " +
+    "In der Demo werden ohnehin keine Daten gespeichert.",
+    () => location.reload(), "Ja, zurücksetzen");
+}
+
+/* ---------- Start ---------- */
+function starten(){
+  document.getElementById("appName").textContent  = state.name;
+  document.getElementById("appUnter").textContent = state.unter;
+  navBauen();
+  rendern();
+  uhrTick();
+  setInterval(uhrTick, 1000);
+  setInterval(() => { if (typeof takt === "function") takt(); }, 1000);
+}
+
+/* ============================================================
+   PRAXISDESK · Demo-Fachlogik
+   Kein Login, keine Konten, keine Rollen: Alle Ansichten sind
+   ueber die Reiter oben frei zugaenglich (Demo-Modus).
+   ============================================================ */
+
+const ANSICHTEN = [
+  { id:"empfang",    label:"Empfang" },
+  { id:"checkin",    label:"Check-in (Kiosk)" },
+  { id:"raum",       label:"Behandlungsraum" },
+  { id:"anzeige",    label:"Wartebereich" },
+  { id:"feedback",   label:"Feedback" },
+  { id:"auswertung", label:"Auswertung" }
+];
+
+const START = Date.now();
+const abStart = m => START + m * MIN;
+let nrZaehler = 0;
+
+const state = {
+  name:  "PraxisDesk",
+  unter: "Demo · Termine, Check-in & Räume",
+  ansicht: "empfang",
+  anzeigeModus: "initialen",   // initialen | nummer
+  anzeigeAktiv: true,
+  sichtschutz: false,
+  noShowMin: 20,
+  kiosk: { modus:"start" },
+  aktiverRaum: "r1",
+  raeume: [
+    { id:"r1", name:"Raum 1 · Behandlung" },
+    { id:"r2", name:"Raum 2 · Behandlung" },
+    { id:"r3", name:"Raum 3 · Training" },
+    { id:"r4", name:"Raum 4 · Massage" },
+    { id:"r5", name:"Raum 5 · Behandlung" }
+  ],
+  behandler: [
+    { id:"b1", name:"L. Krüger", raumHeute:"r1" },
+    { id:"b2", name:"M. Sato",   raumHeute:"r2" },
+    { id:"b3", name:"A. Weber",  raumHeute:"r3" },
+    { id:"b4", name:"T. Öztürk", raumHeute:"r4" }
+  ],
+  termine: [],
+  aufrufe: [],
+  feedback: [],
+  log: [],
+  puls: null
+};
+
+/* ---------- Demo-Daten ---------- */
+function neuerTermin(o){
+  nrZaehler++;
+  return {
+    id: neueId("t"),
+    nummer: "A" + String(nrZaehler).padStart(2, "0"),
+    patient: { name:o.name, initialen:initialen(o.name), geburtsdatum:o.geb },
+    behandlerId: o.beh, raumId: o.raum,
+    zeit: abStart(o.off), dauer: o.dauer,
+    behandlungsart: o.art, status: o.status, dringend: !!o.dringend,
+    checkinZeit: o.ci != null ? abStart(o.ci) : null,
+    aufrufZeit:  o.auf != null ? abStart(o.auf) : null,
+    kioskVersuche: 0, kioskGesperrt: false, anonymisiert: false
+  };
+}
+function demoDaten(){
+  const T = [
+    { name:"Hannelore Brandt", geb:"12.03.1954", beh:"b1", raum:"r1", off:-120, dauer:30, art:"Krankengymnastik", status:"abgeschlossen", ci:-125, auf:-120 },
+    { name:"Jonas Ehlers",     geb:"30.07.1991", beh:"b1", raum:"r1", off:-85,  dauer:30, art:"Manuelle Therapie", status:"abgeschlossen", ci:-92, auf:-85 },
+    { name:"Miriam Falk",      geb:"22.11.1987", beh:"b1", raum:"r1", off:-25,  dauer:30, art:"Krankengymnastik", status:"inBehandlung", ci:-33, auf:-25 },
+    { name:"Peter Grimm",      geb:"05.01.1963", beh:"b1", raum:"r1", off:10,   dauer:30, art:"Manuelle Therapie", status:"anwesend", ci:-6 },
+    { name:"Sofia Marino",     geb:"17.09.1979", beh:"b1", raum:"r1", off:45,   dauer:30, art:"Krankengymnastik", status:"geplant" },
+    { name:"Karlheinz Duda",   geb:"02.02.1949", beh:"b2", raum:"r2", off:-110, dauer:40, art:"Lymphdrainage", status:"abgeschlossen", ci:-118, auf:-110 },
+    { name:"Renate Vogel",     geb:"14.06.1958", beh:"b2", raum:"r2", off:-60,  dauer:30, art:"Krankengymnastik", status:"inBehandlung", ci:-70, auf:-60 },
+    { name:"Ludwig Albers",    geb:"09.10.1972", beh:"b2", raum:"r2", off:-15,  dauer:30, art:"Manuelle Therapie", status:"anwesend", ci:-22 },
+    { name:"Emre Yildiz",      geb:"28.04.1995", beh:"b2", raum:"r2", off:30,   dauer:30, art:"Krankengymnastik", status:"geplant" },
+    { name:"Clara Neumann",    geb:"19.12.1983", beh:"b3", raum:"r3", off:-50,  dauer:45, art:"Gerätetraining", status:"abgeschlossen", ci:-55, auf:-50 },
+    { name:"David Otte",       geb:"03.05.1968", beh:"b3", raum:"r3", off:5,    dauer:45, art:"Gerätetraining", status:"anwesend", ci:-11 },
+    { name:"Frieda Lorenz",    geb:"25.08.2001", beh:"b3", raum:"r3", off:60,   dauer:30, art:"Krankengymnastik", status:"geplant" },
+    { name:"Georg Steiner",    geb:"07.07.1975", beh:"b4", raum:"r4", off:-18,  dauer:30, art:"Massage", status:"inBehandlung", ci:-26, auf:-18 },
+    { name:"Ines Pohl",        geb:"11.02.1990", beh:"b4", raum:"r4", off:20,   dauer:30, art:"Massage", status:"geplant" },
+    { name:"H. Wagner (Notfall)", geb:"01.01.1980", beh:"b2", raum:"r2", off:-5, dauer:20, art:"Akutbehandlung", status:"anwesend", ci:-5, dringend:true }
+  ];
+  state.termine = T.map(neuerTermin);
+  state.termine.filter(t => t.aufrufZeit).sort((a, b) => a.aufrufZeit - b.aufrufZeit)
+    .forEach(t => state.aufrufe.push({ terminId:t.id, zeit:t.aufrufZeit }));
+  state.feedback = [
+    { id:neueId("f"), zeit:abStart(-95), typ:"Beschwerde", text:"Die Wartezeit war letzte Woche über 40 Minuten, ohne dass jemand Bescheid gesagt hat.", name:"", status:"inBearbeitung" },
+    { id:neueId("f"), zeit:abStart(-40), typ:"Lob", text:"Sehr freundliches Team, die Behandlung hat spürbar geholfen. Danke!", name:"C. Neumann", status:"erledigt" }
+  ];
+  loggen("Demo-Daten geladen: 15 Termine (inkl. 1 Notfall), 5 Räume, 4 Behandler.");
+}
+
+/* ---------- Fachlogik ---------- */
+const termin       = id => state.termine.find(t => t.id === id);
+const behandlerName= id => (state.behandler.find(b => b.id === id) || {}).name || "–";
+const raumName     = id => (state.raeume.find(r => r.id === id) || {}).name || "–";
+const anzeigeName  = t  => state.anzeigeModus === "nummer" ? ("Nr. " + t.nummer) : t.patient.initialen;
+const terminEnde   = t  => t.zeit + t.dauer * MIN;
+const pName        = t  => state.sichtschutz ? t.patient.initialen : esc(t.patient.name);
+
+const STATUS_TEXT = { geplant:"geplant", anwesend:"wartet", inBehandlung:"in Behandlung", abgeschlossen:"abgeschlossen", nichtErschienen:"nicht erschienen" };
+const STATUS_CHIP = { geplant:"", anwesend:"info", inBehandlung:"arbeit", abgeschlossen:"fertig", nichtErschienen:"warn" };
+const chip = t => '<span class="chip ' + STATUS_CHIP[t.status] + '">' + STATUS_TEXT[t.status] + '</span>' +
+  (t.dringend ? ' <span class="chip voll">dringend</span>' : "");
+
+function fortschritt(t){
+  const n = Date.now();
+  return {
+    pct: Math.max(0, Math.min(100, Math.round(100 * (n - t.zeit) / (t.dauer * MIN)))),
+    rest: Math.round((terminEnde(t) - n) / MIN)
+  };
+}
+function zeitband(t){
+  const f = fortschritt(t);
+  const label = f.rest >= 0 ? ("noch ca. " + f.rest + " Min") : (Math.abs(f.rest) + " Min drüber");
+  return '<div style="margin-top:10px"><div class="spur-kopf"><span class="mono">' + hhmm(t.zeit) + "–" + hhmm(terminEnde(t)) +
+    '</span><span' + (f.rest < 0 ? ' style="color:var(--warn);font-weight:600"' : "") + '>' + label + '</span></div>' +
+    '<div class="fortschritt' + (f.rest < 0 ? " ueber" : "") + '"><i style="width:' + f.pct + '%"></i></div></div>';
+}
+function raumVerzugMin(raumId){
+  const n = Date.now();
+  const akt = state.termine.find(t => t.raumId === raumId && t.status === "inBehandlung");
+  if (akt) return Math.max(0, Math.round((n - terminEnde(akt)) / MIN));
+  const nx = state.termine.filter(t => t.raumId === raumId && ["anwesend","geplant"].includes(t.status)).sort((a, b) => a.zeit - b.zeit)[0];
+  return nx ? Math.max(0, Math.round((n - nx.zeit) / MIN)) : 0;
+}
+const ampelKlasse = m => m <= 5 ? "gruen" : (m <= 15 ? "gelb" : "rot");
+function raumFreiAb(raumId){
+  const offen = state.termine.filter(t => t.raumId === raumId && !["abgeschlossen","nichtErschienen"].includes(t.status));
+  if (!offen.length) return "jetzt frei";
+  return "frei ab ca. " + hhmm(terminEnde(offen.sort((a, b) => terminEnde(b) - terminEnde(a))[0]));
+}
+function checkin(id, amTresen){
+  const t = termin(id); if (!t) return;
+  t.status = "anwesend"; t.checkinZeit = Date.now();
+  loggen((amTresen ? "Empfang: " : "Kiosk: ") + anzeigeName(t) + " eingecheckt.", amTresen ? "Empfang" : "Kiosk");
+  puls(t.id); rendern();
+}
+function naechstenAufrufen(raumId){
+  const n = Date.now();
+  const akt = state.termine.find(t => t.raumId === raumId && t.status === "inBehandlung");
+  if (akt){ akt.status = "abgeschlossen"; loggen(raumName(raumId) + ": Behandlung " + anzeigeName(akt) + " abgeschlossen.", "Raum"); }
+  const next = state.termine.filter(t => t.raumId === raumId && t.status === "anwesend")
+    .sort((a, b) => (b.dringend - a.dringend) || (a.zeit - b.zeit))[0];
+  if (next){
+    next.status = "inBehandlung"; next.aufrufZeit = n;
+    state.aufrufe.push({ terminId:next.id, zeit:n });
+    loggen(raumName(raumId) + ": " + anzeigeName(next) + (next.dringend ? " (dringend, vorgezogen)" : "") + " aufgerufen.", "Raum");
+  } else if (!akt){
+    loggen(raumName(raumId) + ": Aufruf ohne wartenden Patienten.", "Raum");
+  }
+  rendern();
+}
+function autoNoShow(){
+  const n = Date.now(); let geaendert = false;
+  state.termine.forEach(t => {
+    if (t.status === "geplant" && (n - t.zeit) / MIN > state.noShowMin){
+      t.status = "nichtErschienen"; geaendert = true;
+      loggen("Automatik: Termin " + hhmm(t.zeit) + " (" + anzeigeName(t) + ") als „nicht erschienen“ markiert.");
+    }
+  });
+  return geaendert;
+}
+function anonymisieren(){
+  let n = 0;
+  state.termine.forEach(t => {
+    if (["abgeschlossen","nichtErschienen"].includes(t.status) && !t.anonymisiert){
+      t.patient.name = t.patient.initialen; t.patient.geburtsdatum = "—"; t.anonymisiert = true; n++;
+    }
+  });
+  loggen("Datenschutz: " + n + " abgeschlossene Datensätze anonymisiert.");
+  modalSchliessen(); rendern();
+}
+function logLeeren(){ state.log = []; loggen("Datenschutz: Ereignis-Log gelöscht."); modalSchliessen(); rendern(); }
+
+function kennzahlen(){
+  const T = state.termine;
+  const auslastung = {};
+  const fertigOderLaeuft = T.filter(t => ["abgeschlossen","inBehandlung"].includes(t.status));
+  state.raeume.forEach(r => { auslastung[r.id] = fertigOderLaeuft.filter(t => t.raumId === r.id).reduce((s, t) => s + t.dauer, 0); });
+  const mitWarte = T.filter(t => t.checkinZeit && t.aufrufZeit);
+  const warteMin = mitWarte.length
+    ? Math.round(mitWarte.reduce((s, t) => s + Math.max(0, (t.aufrufZeit - t.checkinZeit) / MIN), 0) / mitWarte.length) : 0;
+  const noShow = T.filter(t => t.status === "nichtErschienen").length;
+  const vergangen = T.filter(t => t.zeit < Date.now()).length || 1;
+  return {
+    auslastung, warteMin,
+    noShowQuote: Math.round(100 * noShow / vergangen),
+    verzugRaeume: state.raeume.filter(r => raumVerzugMin(r.id) > 5).length,
+    wartende: T.filter(t => t.status === "anwesend").length,
+    offeneBeschwerden: state.feedback.filter(f => f.typ === "Beschwerde" && f.status !== "erledigt").length
+  };
+}
+function kpi(label, wert, unter, klasse){
+  return '<div class="kpi ' + (klasse || "") + '"><div class="label">' + label + '</div>' +
+    '<div class="wert">' + wert + '</div><div class="unter">' + unter + '</div></div>';
+}
+
+/* ============================================================
+   ANSICHT · EMPFANG
+   ============================================================ */
+function ansichtEmpfang(){
+  const k = kennzahlen();
+  const raumKarten = state.raeume.map(r => {
+    const verzug = raumVerzugMin(r.id);
+    const akt = state.termine.find(t => t.raumId === r.id && t.status === "inBehandlung");
+    const beh = state.behandler.find(b => b.raumHeute === r.id);
+    const nx = state.termine.filter(t => t.raumId === r.id && ["anwesend","geplant"].includes(t.status))
+      .sort((a, b) => (b.dringend - a.dringend) || (a.zeit - b.zeit))[0];
+    return '<div class="karte"><div class="raum-kopf"><span class="ampel ' + ampelKlasse(verzug) + '" title="Verzögerungs-Ampel"></span>' +
+      '<h3>' + esc(r.name) + '</h3><span class="frei-ab">' + raumFreiAb(r.id) + '</span></div>' +
+      '<div class="hinweis" style="margin-bottom:8px">' + (beh ? esc(beh.name) : "– heute nicht besetzt –") +
+      (verzug > 5 ? ' · <b style="color:var(--warn)">+' + verzug + ' Min Verzug</b>' : "") + '</div>' +
+      (akt
+        ? '<div style="font-size:15px">Jetzt: <b>' + pName(akt) + '</b>' + (akt.dringend ? ' <span class="chip voll">dringend</span>' : "") + '</div>' + zeitband(akt)
+        : '<div class="leer" style="padding:14px">Kein Patient in Behandlung</div>') +
+      '<div class="hinweis" style="margin-top:10px">' +
+      (nx ? 'Danach: <b style="color:var(--text)">' + pName(nx) + '</b> <span class="mono">' + hhmm(nx.zeit) + '</span> ' + chip(nx)
+          : "Keine weiteren Termine") + '</div></div>';
+  }).join("");
+
+  const heute = state.termine.slice().sort((a, b) => a.zeit - b.zeit).map(t =>
+    '<div class="zeile klick" data-puls="' + t.id + '" onclick="terminModal(\'' + t.id + '\')" title="Antippen zum Bearbeiten">' +
+    '<span class="zeit">' + hhmm(t.zeit) + '</span>' +
+    '<span class="name">' + pName(t) + ' <span class="meta mono">(' + t.nummer + ')</span>' +
+    (t.kioskGesperrt ? ' <span class="chip warn" title="3× falsches Geburtsdatum am Kiosk">Kiosk gesperrt</span>' : "") + '</span>' +
+    '<span class="meta">' + esc(t.behandlungsart) + ' · ' + esc(raumName(t.raumId)) + ' · ' + esc(behandlerName(t.behandlerId)) + '</span>' +
+    chip(t) +
+    (t.status === "geplant" ? '<button class="btn klein" onclick="event.stopPropagation();checkin(\'' + t.id + '\',true)">Einchecken</button>' : "") +
+    '</div>').join("");
+
+  return '<div class="kpis">' +
+    kpi("Im Wartebereich", k.wartende, "eingecheckt, wartet auf Aufruf") +
+    kpi("Ø Wartezeit", k.warteMin + '<small> Min</small>', "Check-in bis Aufruf") +
+    kpi("Räume im Verzug", k.verzugRaeume, "mehr als 5 Min hinter Plan", k.verzugRaeume ? "warnung" : "gut") +
+    kpi("Offene Beschwerden", k.offeneBeschwerden, "aus Kiosk & Tresen", k.offeneBeschwerden ? "warnung" : "gut") +
+    '</div>' +
+    '<div class="abschnitt"><div><span class="eyebrow">Ansicht 1 · Tablet am Empfang</span>' +
+    '<h2>Alle Räume in Echtzeit</h2></div><div class="aktionen">' +
+    '<button class="btn" onclick="sichtschutzUm()">' + (state.sichtschutz ? "Sichtschutz aus" : "Sichtschutz an") + '</button>' +
+    '<button class="btn gefahr" onclick="terminModal(null,true)">Notfall / ohne Termin</button>' +
+    '<button class="btn primaer" onclick="terminModal(null)">＋ Termin anlegen</button></div></div>' +
+    '<div class="raster r3">' + raumKarten + '</div>' +
+    '<div class="abschnitt"><h2>Termine heute</h2>' +
+    '<span class="hinweis">Zeile antippen: bearbeiten, verschieben, „nicht erschienen“ setzen oder löschen</span></div>' +
+    '<div class="karte still">' + (heute || '<div class="leer"><b>Keine Termine</b>Der Tag ist frei.</div>') + '</div>';
+}
+function sichtschutzUm(){
+  state.sichtschutz = !state.sichtschutz;
+  loggen("Empfang: Sichtschutz " + (state.sichtschutz ? "aktiviert" : "deaktiviert") + " (Namen werden abgekürzt).", "Empfang");
+  rendern();
+}
+
+/* ============================================================
+   ANSICHT · CHECK-IN (Kiosk)
+   ============================================================ */
+function ansichtKiosk(){
+  const s = state.kiosk;
+  const rahmen = inhalt =>
+    '<div class="abschnitt"><div><span class="eyebrow">Ansicht 2 · Tablet im Eingang</span><h2>Check-in-Kiosk</h2></div>' +
+    '<span class="hinweis">Patient tippt Namen an und bestätigt sein Geburtsdatum</span></div>' + inhalt;
+
+  if (s.modus === "start"){
+    return rahmen('<div class="kiosk"><h1>Herzlich willkommen</h1>' +
+      '<p class="unter">Was möchten Sie tun?</p><div class="wahl">' +
+      '<button onclick="kioskSchritt({modus:\'liste\'})"><span class="ikn">✓</span>' +
+      '<span>Zum Termin anmelden<small>Namen antippen, Geburtsdatum bestätigen – fertig.</small></span></button>' +
+      '<button onclick="kioskSchritt({modus:\'feedback\'})"><span class="ikn zart">✎</span>' +
+      '<span>Feedback oder Beschwerde<small>Lob, Hinweis oder Beschwerde – gerne anonym.</small></span></button>' +
+      '</div><p style="margin-top:20px"><button class="btn klein" onclick="datenschutzModal()">Datenschutzhinweis</button></p></div>');
+  }
+  if (s.modus === "feedback"){
+    return rahmen('<div class="kiosk"><div class="karte" style="text-align:left;padding:26px">' +
+      '<h1 style="text-align:center">Ihre Rückmeldung</h1>' +
+      '<p class="unter" style="text-align:center">Lob, Hinweis oder Beschwerde – gerne auch anonym.</p>' +
+      '<div class="feld"><label>Art der Rückmeldung</label><select id="fb_typ">' +
+      '<option>Beschwerde</option><option>Hinweis</option><option>Lob</option></select></div>' +
+      '<div class="feld"><label>Ihre Nachricht</label><textarea id="fb_text" placeholder="Was möchten Sie uns mitteilen?"></textarea></div>' +
+      '<div class="feld"><label>Name (freiwillig – leer lassen für anonym)</label><input id="fb_name" placeholder="anonym"></div>' +
+      '<div class="fehler" id="fb_fehler"></div>' +
+      '<button class="btn primaer gross" onclick="feedbackSenden()">Absenden</button>' +
+      '<button class="btn gross" style="margin-top:10px" onclick="kioskSchritt({modus:\'start\'})">Zurück</button>' +
+      '</div></div>');
+  }
+  if (s.modus === "feedbackDanke"){
+    return rahmen('<div class="kiosk"><div class="karte willkommen puls"><div class="haken">💌</div>' +
+      '<h1>Vielen Dank!</h1><p class="unter">Ihre Rückmeldung liegt jetzt beim Praxisteam.</p></div></div>');
+  }
+  if (s.modus === "geburt"){
+    const t = termin(s.terminId);
+    if (!t || t.kioskGesperrt){ state.kiosk = { modus:"liste" }; return ansichtKiosk(); }
+    return rahmen('<div class="kiosk"><div class="karte" style="padding:28px">' +
+      '<span class="eyebrow">Identität bestätigen</span>' +
+      '<h1 style="margin-top:4px">' + esc(t.patient.name) + '</h1>' +
+      '<p class="unter" style="margin-bottom:6px">Bitte geben Sie zur Bestätigung Ihr <b>Geburtsdatum</b> ein.</p>' +
+      gebSlots(s.eingabe) +
+      '<div class="fehler">' + (s.fehler || "") + '</div>' +
+      '<div class="ziffernblock">' +
+      [1,2,3,4,5,6,7,8,9].map(z => '<button class="ziffer" onclick="kioskZiffer(\'' + z + '\')">' + z + '</button>').join("") +
+      '<button class="ziffer" onclick="kioskLoeschen()" aria-label="Löschen">⌫</button>' +
+      '<button class="ziffer" onclick="kioskZiffer(\'0\')">0</button>' +
+      '<button class="ziffer ok" onclick="kioskPruefen()">OK</button></div>' +
+      '<button class="btn gross" onclick="kioskSchritt({modus:\'liste\'})">Zurück zur Liste</button></div></div>');
+  }
+  if (s.modus === "fertig"){
+    const t = termin(s.terminId);
+    return rahmen('<div class="kiosk"><div class="karte willkommen puls"><div class="haken">✅</div>' +
+      '<h1>Willkommen' + (t ? ", " + esc(t.patient.name.split(" ")[0]) : "") + '!</h1>' +
+      '<p class="unter">Bitte nehmen Sie im Wartebereich Platz –<br>Sie werden aufgerufen.</p>' +
+      '<p class="mono hinweis">Diese Ansicht setzt sich gleich automatisch zurück …</p></div></div>');
+  }
+  if (s.modus === "gesperrt"){
+    return rahmen('<div class="kiosk"><div class="karte willkommen"><div class="haken">🛎️</div>' +
+      '<h1>Bitte am Empfang melden</h1>' +
+      '<p class="unter">Die Bestätigung war dreimal nicht möglich.<br>Das Team hilft Ihnen gerne persönlich weiter.</p>' +
+      '<button class="btn primaer gross" style="max-width:320px;margin:16px auto 0" onclick="kioskSchritt({modus:\'start\'})">Zurück zum Start</button></div></div>');
+  }
+  const offen = state.termine.filter(t => t.status === "geplant").sort((a, b) => a.zeit - b.zeit);
+  return rahmen('<div class="kiosk"><h1>Anmeldung</h1>' +
+    '<p class="unter">Bitte tippen Sie auf Ihren Namen.<br><span style="font-size:13.5px">Zur Sicherheit fragen wir anschließend Ihr Geburtsdatum ab.</span></p>' +
+    (offen.map(t => t.kioskGesperrt
+      ? '<div class="kiosk-taste gesperrt"><span>' + esc(t.patient.name) + '</span><span class="kt-zeit">Bitte am Empfang melden</span></div>'
+      : '<button class="kiosk-taste" onclick="kioskSchritt({modus:\'geburt\',terminId:\'' + t.id + '\',eingabe:\'\',fehler:\'\'})">' +
+        '<span>' + esc(t.patient.name) + '</span><span class="kt-zeit">' + hhmm(t.zeit) + ' Uhr</span></button>').join("")
+      || '<div class="leer"><b>Alle Patienten sind eingecheckt</b>Ohne Termin? Bitte am Empfang melden.</div>') +
+    '<p class="hinweis" style="margin-top:16px">Ihr Name fehlt oder Sie kommen ohne Termin? Bitte wenden Sie sich an den Empfang.</p>' +
+    '<button class="btn gross" style="margin-top:10px" onclick="kioskSchritt({modus:\'start\'})">Zurück</button></div>');
+}
+function kioskSchritt(s){ state.kiosk = s; rendern(); }
+function gebSlots(eingabe){
+  const z = (eingabe || "").split("");
+  const slot = i => '<span class="slot' + (z[i] ? "" : " leer-s") + (i === z.length ? " aktiv-s" : "") + '">' + (z[i] || "TTMMJJJJ"[i]) + '</span>';
+  return '<div class="geb-slots">' + slot(0) + slot(1) + '<span class="sep">.</span>' + slot(2) + slot(3) +
+    '<span class="sep">.</span>' + slot(4) + slot(5) + slot(6) + slot(7) + '</div>';
+}
+function gebFormat(z){
+  z = (z || "").slice(0, 8);
+  let out = z.slice(0, 2);
+  if (z.length > 2) out += "." + z.slice(2, 4);
+  if (z.length > 4) out += "." + z.slice(4, 8);
+  return out;
+}
+function kioskZiffer(d){
+  const s = state.kiosk;
+  if ((s.eingabe || "").length < 8){ s.eingabe = (s.eingabe || "") + d; s.fehler = ""; rendern(); }
+}
+function kioskLoeschen(){ const s = state.kiosk; s.eingabe = (s.eingabe || "").slice(0, -1); s.fehler = ""; rendern(); }
+function kioskPruefen(){
+  const s = state.kiosk, t = termin(s.terminId);
+  if (!t) return;
+  if (gebFormat(s.eingabe) === t.patient.geburtsdatum){
+    t.status = "anwesend"; t.checkinZeit = Date.now();
+    loggen("Kiosk: " + anzeigeName(t) + " eingecheckt (Geburtsdatum bestätigt).", "Kiosk");
+    state.kiosk = { modus:"fertig", terminId:t.id };
+    rendern();
+    setTimeout(() => { if (state.kiosk.modus === "fertig"){ state.kiosk = { modus:"start" }; rendern(); } }, 5000);
+    return;
+  }
+  t.kioskVersuche++;
+  if (t.kioskVersuche >= 3){
+    t.kioskGesperrt = true;
+    loggen("Kiosk: 3× falsches Geburtsdatum für " + anzeigeName(t) + " – Check-in gesperrt, Freigabe nur am Empfang.", "Kiosk");
+    state.kiosk = { modus:"gesperrt" };
+  } else {
+    s.eingabe = ""; s.fehler = "Das Geburtsdatum stimmt nicht überein (" + t.kioskVersuche + "/3 Versuche).";
+  }
+  rendern();
+}
+function feedbackSenden(){
+  const text = feldWert("fb_text");
+  if (!text){ document.getElementById("fb_fehler").textContent = "Bitte geben Sie eine Nachricht ein."; return; }
+  const typ = document.getElementById("fb_typ").value;
+  state.feedback.push({ id:neueId("f"), zeit:Date.now(), typ, text, name:feldWert("fb_name"), status:"offen" });
+  loggen("Kiosk: Neue Rückmeldung (" + typ + ") eingegangen.", "Kiosk");
+  state.kiosk = { modus:"feedbackDanke" };
+  rendern();
+  setTimeout(() => { if (state.kiosk.modus === "feedbackDanke"){ state.kiosk = { modus:"start" }; rendern(); } }, 4000);
+}
+function datenschutzModal(){
+  modalOeffnen('<h2>Datenschutzhinweis</h2>' +
+    '<p class="fliess">Beim Self-Check-in wird nur der Anwesenheitsstatus zum heutigen Termin erfasst. Das Geburtsdatum dient ausschließlich der Bestätigung der Identität und wird nicht angezeigt. Auf der öffentlichen Wartebereich-Anzeige erscheinen niemals volle Namen – nur Initialen oder eine Aufrufnummer. Medizinische Daten werden an diesem Gerät weder angezeigt noch erfasst.</p>' +
+    '<p class="fliess"><b>Demo-Version:</b> Alle Personen und Termine sind frei erfunden. Es werden keine Daten gespeichert oder übertragen.</p>' +
+    '<div class="modal-fuss"><button class="btn primaer" onclick="modalSchliessen()">Verstanden</button></div>');
+}
+
+/* ============================================================
+   ANSICHT · BEHANDLUNGSRAUM
+   ============================================================ */
+function ansichtRaum(){
+  const r = state.raeume.find(x => x.id === state.aktiverRaum) || state.raeume[0];
+  if (!r) return '<div class="leer"><b>Kein Raum angelegt</b>Unter ⚙ Einstellungen einen Raum hinzufügen.</div>';
+  const beh = state.behandler.find(b => b.raumHeute === r.id);
+  const verzug = raumVerzugMin(r.id);
+  const akt = state.termine.find(t => t.raumId === r.id && t.status === "inBehandlung");
+  const plan = state.termine.filter(t => t.raumId === r.id).sort((a, b) => a.zeit - b.zeit);
+  const wartend = plan.filter(t => t.status === "anwesend").sort((a, b) => (b.dringend - a.dringend) || (a.zeit - b.zeit));
+
+  return '<div class="abschnitt"><div><span class="eyebrow">Ansicht 3 · Display im Behandlungsraum</span>' +
+    '<h2 style="display:flex;align-items:center;gap:10px"><span class="ampel ' + ampelKlasse(verzug) + '"></span>' + esc(r.name) + '</h2>' +
+    '<div class="hinweis" style="margin-top:3px">Behandler heute: ' + (beh ? esc(beh.name) : "– nicht besetzt –") +
+    ' · <span class="frei-ab">' + raumFreiAb(r.id) + '</span>' +
+    (verzug > 5 ? ' · <b style="color:var(--warn)">+' + verzug + ' Min Verzug</b>' : "") + '</div></div>' +
+    '<select class="schmal" style="max-width:280px" onchange="state.aktiverRaum=this.value;rendern()">' +
+    state.raeume.map(x => '<option value="' + x.id + '"' + (x.id === r.id ? " selected" : "") + '>' + esc(x.name) + '</option>').join("") +
+    '</select></div>' +
+    '<div class="raster r2"><div class="karte">' +
+    '<span class="eyebrow">Jetzt in Behandlung</span>' +
+    (akt
+      ? '<h3 style="font-size:24px;margin:6px 0 2px">' + esc(akt.patient.name) + (akt.dringend ? ' <span class="chip voll">dringend</span>' : "") + '</h3>' +
+        '<div class="hinweis">' + esc(akt.behandlungsart) + '</div>' + zeitband(akt)
+      : '<div class="leer" style="margin-top:8px">Kein Patient in Behandlung.</div>') +
+    '<button class="btn primaer gross" style="margin-top:16px" onclick="naechstenAufrufen(\'' + r.id + '\')">' +
+    (akt ? "Abschließen & nächsten aufrufen" : "Nächsten Patienten aufrufen") + ' →</button>' +
+    '<div class="hinweis" style="margin-top:12px">' +
+    (wartend.length
+      ? 'Als Nächstes: <b style="color:var(--text)">' + esc(wartend[0].patient.name) + '</b>' +
+        (wartend[0].dringend ? ' <span class="chip voll">dringend</span>' : "") + ' (eingecheckt ' + hhmm(wartend[0].checkinZeit) + ')'
+      : "Aktuell wartet niemand Eingechecktes für diesen Raum.") + '</div></div>' +
+    '<div class="karte"><span class="eyebrow">Tagesplan ' + esc(r.name) + '</span><div style="margin-top:8px">' +
+    (plan.map(t => '<div class="zeile"><span class="zeit">' + hhmm(t.zeit) + '</span>' +
+      '<span class="name">' + esc(t.patient.name) + '</span><span class="meta">' + esc(t.behandlungsart) + '</span>' + chip(t) + '</div>').join("")
+      || '<div class="leer"><b>Heute keine Termine in diesem Raum</b>Alles frei.</div>') +
+    '</div></div></div>';
+}
+
+/* ============================================================
+   ANSICHT · WARTEBEREICH-ANZEIGE
+   ============================================================ */
+function ansichtAnzeige(){
+  const kopf = '<div class="abschnitt"><div><span class="eyebrow">Ansicht 4 · Bildschirm im Wartebereich</span>' +
+    '<h2>Öffentliche Aufruf-Anzeige</h2></div>' +
+    '<span class="hinweis">Datenschutz: nie volle Namen – nur ' + (state.anzeigeModus === "nummer" ? "Aufrufnummern" : "Initialen") + '</span></div>';
+  if (!state.anzeigeAktiv){
+    return kopf + '<div class="anzeige" style="display:flex;align-items:center;justify-content:center">' +
+      '<h2 style="opacity:.6;text-align:center">Anzeige pausiert –<br>bitte auf den Aufruf durch das Personal achten.</h2></div>';
+  }
+  const letzte = state.aufrufe.slice(-5).reverse();
+  const wartend = state.termine.filter(t => t.status === "anwesend").length;
+  return kopf + '<div class="anzeige"><div class="az-kopf"><h2>Aufrufe</h2>' +
+    '<span class="az-uhr">' + hhmm(Date.now()) + '</span></div>' +
+    (letzte.map((a, i) => {
+      const t = termin(a.terminId); if (!t) return "";
+      const raumKurz = esc(raumName(t.raumId).split("·")[0].trim());
+      return '<div class="aufruf' + (i === 0 ? " neu" : "") + '"><span>' + anzeigeName(t) + '</span>' +
+        '<span class="pfeil">→</span><span>' + raumKurz + '</span><span class="az-zeit">' + hhmm(a.zeit) + '</span></div>';
+    }).join("") || '<div class="aufruf" style="justify-content:center;opacity:.7;font-family:var(--f-text);font-size:19px">Noch keine Aufrufe – bitte gedulden Sie sich kurz.</div>') +
+    '<div class="az-fuss">Derzeit ' + wartend + (wartend === 1 ? " Person" : " Personen") + ' im Wartebereich · ' +
+    'Demo-Version mit Beispieldaten</div></div>';
+}
+
+/* ============================================================
+   ANSICHT · FEEDBACK
+   ============================================================ */
+function ansichtFeedback(){
+  const k = kennzahlen();
+  const liste = state.feedback.slice().sort((a, b) => b.zeit - a.zeit).map(f =>
+    '<div class="zeile"><span class="zeit">' + hhmm(f.zeit) + '</span>' +
+    '<span class="chip ' + (f.typ === "Beschwerde" ? "warn" : f.typ === "Lob" ? "fertig" : "") + '">' + f.typ + '</span>' +
+    '<span class="name" style="font-weight:400">' + esc(f.text) +
+    (f.name ? ' <span class="meta">– ' + esc(f.name) + '</span>' : ' <span class="meta">– anonym</span>') + '</span>' +
+    '<select class="schmal" onchange="feedbackStatus(\'' + f.id + '\',this.value)">' +
+    ["offen","inBearbeitung","erledigt"].map(s => '<option value="' + s + '"' + (f.status === s ? " selected" : "") + '>' +
+      (s === "inBearbeitung" ? "in Bearbeitung" : s) + '</option>').join("") + '</select>' +
+    '<button class="btn klein gefahr" onclick="feedbackLoeschen(\'' + f.id + '\')">Löschen</button></div>').join("");
+
+  return '<div class="abschnitt"><div><span class="eyebrow">Rückmeldungen der Patienten</span>' +
+    '<h2>Beschwerden & Feedback ' + (k.offeneBeschwerden ? '<span class="chip warn">' + k.offeneBeschwerden + ' offen</span>' : "") + '</h2></div>' +
+    '<span class="hinweis">Eingang über den Check-in-Kiosk oder direkt am Tresen</span></div>' +
+    '<div class="karte still">' + (liste || '<div class="leer"><b>Keine Einträge</b>Nichts offen.</div>') + '</div>';
+}
+function feedbackStatus(id, s){
+  const f = state.feedback.find(f => f.id === id);
+  if (f){ f.status = s; loggen("Feedback von " + hhmm(f.zeit) + " → " + s + ".", "Empfang"); rendern(); }
+}
+function feedbackLoeschen(id){
+  state.feedback = state.feedback.filter(f => f.id !== id);
+  loggen("Feedback-Eintrag gelöscht.", "Empfang"); rendern();
+}
+
+/* ============================================================
+   ANSICHT · AUSWERTUNG (mit Ereignis-Log)
+   ============================================================ */
+function ansichtAuswertung(){
+  const k = kennzahlen();
+  const maxA = Math.max(1, ...state.raeume.map(r => k.auslastung[r.id] || 0));
+  const balken = state.raeume.map(r => {
+    const v = k.auslastung[r.id] || 0;
+    return '<div class="balken-zeile"><span class="bz-name">' + esc(r.name.split("·")[0].trim()) + '</span>' +
+      '<div class="fortschritt" style="flex:1"><i style="width:' + Math.round(100 * v / maxA) + '%"></i></div>' +
+      '<span class="bz-wert">' + v + ' Min</span></div>';
+  }).join("");
+
+  return '<div class="abschnitt"><div><span class="eyebrow">Kennzahlen live aus den Demo-Daten</span>' +
+    '<h2>Auswertung</h2></div></div>' +
+    '<div class="kpis">' +
+    kpi("Ø Wartezeit", k.warteMin + '<small> Min</small>', "Check-in bis Aufruf") +
+    kpi("No-Show-Quote", k.noShowQuote + '<small> %</small>', "nicht erschienen") +
+    kpi("Räume im Verzug", k.verzugRaeume, "mehr als 5 Min", k.verzugRaeume ? "warnung" : "gut") +
+    kpi("Im Wartebereich", k.wartende, "wartet auf Aufruf") +
+    '</div>' +
+    '<div class="zwei-spalten"><div class="karte still"><div class="karte-kopf"><h3>Auslastung je Raum (heute)</h3>' +
+    '<span class="hinweis">belegte Behandlungsminuten</span></div>' + balken + '</div>' +
+    logKarte() + '</div>';
+}
+
+/* ============================================================
+   MODAL · TERMIN
+   ============================================================ */
+function terminModal(id, notfall){
+  const t = id ? termin(id) : null;
+  const behOpt = state.behandler.map(x => '<option value="' + x.id + '"' +
+    ((t ? t.behandlerId : (state.behandler[0] || {}).id) === x.id ? " selected" : "") + '>' + esc(x.name) + '</option>').join("");
+  const raumOpt = state.raeume.map(x => '<option value="' + x.id + '"' +
+    ((t ? t.raumId : (state.raeume[0] || {}).id) === x.id ? " selected" : "") + '>' + esc(x.name) + '</option>').join("");
+  const startStatus = t ? t.status : (notfall ? "anwesend" : "geplant");
+  const statusOpt = Object.entries(STATUS_TEXT).map(([k, v]) =>
+    '<option value="' + k + '"' + (startStatus === k ? " selected" : "") + '>' + v + '</option>').join("");
+
+  modalOeffnen('<h2>' + (t ? "Termin bearbeiten" : (notfall ? "Notfall / Patient ohne Termin" : "Neuen Termin anlegen")) + '</h2>' +
+    (notfall ? '<p class="fliess" style="margin-bottom:12px">Wird sofort als „wartet“ und „dringend“ aufgenommen und beim nächsten Aufruf vorgezogen.</p>' : "") +
+    '<div class="feld"><label>Patientenname</label><input id="m_name" value="' + (t ? esc(t.patient.name) : "") + '" placeholder="Vorname Nachname"></div>' +
+    '<div class="feld"><label>Geburtsdatum (für Kiosk-Bestätigung)</label><input id="m_geb" value="' + (t ? esc(t.patient.geburtsdatum) : "") + '" placeholder="TT.MM.JJJJ"></div>' +
+    '<div class="feld-2"><div class="feld"><label>Uhrzeit</label><input id="m_zeit" type="time" value="' +
+      (t ? hhmm(t.zeit) : hhmm(notfall ? Date.now() : Date.now() + 30 * MIN)) + '"></div>' +
+    '<div class="feld"><label>Dauer (Minuten)</label><input id="m_dauer" type="number" min="5" step="5" value="' + (t ? t.dauer : (notfall ? 20 : 30)) + '"></div></div>' +
+    '<div class="feld-2"><div class="feld"><label>Raum</label><select id="m_raum">' + raumOpt + '</select></div>' +
+    '<div class="feld"><label>Behandler</label><select id="m_beh">' + behOpt + '</select></div></div>' +
+    '<div class="feld"><label>Behandlungsart</label><input id="m_art" value="' +
+      (t ? esc(t.behandlungsart) : (notfall ? "Akutbehandlung" : "Krankengymnastik")) + '"></div>' +
+    '<div class="feld-2"><div class="feld"><label>Status</label><select id="m_status">' + statusOpt + '</select></div>' +
+    '<div class="feld"><label>Priorität</label><select id="m_dringend">' +
+    '<option value="0"' + ((t ? !t.dringend : !notfall) ? " selected" : "") + '>normal</option>' +
+    '<option value="1"' + ((t ? t.dringend : !!notfall) ? " selected" : "") + '>dringend (wird vorgezogen)</option></select></div></div>' +
+    (t && t.kioskGesperrt
+      ? '<div class="feld"><label>Kiosk-Sperre (3× falsches Geburtsdatum)</label>' +
+        '<button class="btn klein" onclick="kioskEntsperren(\'' + t.id + '\')">Kiosk-Check-in wieder freigeben</button></div>' : "") +
+    '<div class="modal-fuss">' +
+    (t ? '<button class="btn gefahr" onclick="terminLoeschen(\'' + t.id + '\')">Termin löschen</button>' : "") +
+    '<button class="btn" onclick="modalSchliessen()">Abbrechen</button>' +
+    '<button class="btn primaer" onclick="terminSpeichern(' + (t ? "'" + t.id + "'" : "null") + ')">Speichern</button></div>');
+}
+function kioskEntsperren(id){
+  const t = termin(id);
+  if (t){ t.kioskGesperrt = false; t.kioskVersuche = 0; loggen("Empfang: Kiosk-Sperre für " + anzeigeName(t) + " aufgehoben.", "Empfang"); modalSchliessen(); rendern(); }
+}
+function terminSpeichern(id){
+  const name = feldWert("m_name") || "Unbenannt";
+  const zeit = zeitHeute(document.getElementById("m_zeit").value);
+  const dringend = document.getElementById("m_dringend").value === "1";
+  const status = document.getElementById("m_status").value;
+  const daten = {
+    behandlerId: document.getElementById("m_beh").value,
+    raumId: document.getElementById("m_raum").value,
+    zeit, dauer: feldZahl("m_dauer", 30) || 30,
+    behandlungsart: feldWert("m_art") || "Behandlung",
+    status, dringend
+  };
+  if (id){
+    const t = termin(id);
+    Object.assign(t, daten);
+    t.patient.name = name; t.patient.initialen = initialen(name); t.patient.geburtsdatum = feldWert("m_geb");
+    if (t.status === "anwesend" && !t.checkinZeit) t.checkinZeit = Date.now();
+    loggen("Empfang: Termin " + hhmm(zeit) + " (" + t.patient.initialen + ") geändert.", "Empfang");
+    puls(t.id);
+  } else {
+    nrZaehler++;
+    const t = Object.assign({
+      id: neueId("t"), nummer: "A" + String(nrZaehler).padStart(2, "0"),
+      patient: { name, initialen: initialen(name), geburtsdatum: feldWert("m_geb") },
+      checkinZeit: status !== "geplant" ? Date.now() : null, aufrufZeit: null,
+      kioskVersuche: 0, kioskGesperrt: false, anonymisiert: false
+    }, daten);
+    state.termine.push(t);
+    loggen("Empfang: " + (dringend ? "Dringende Aufnahme" : "Neuer Termin") + " " + hhmm(zeit) + " (" + t.patient.initialen + ").", "Empfang");
+    puls(t.id);
+  }
+  modalSchliessen(); rendern();
+}
+function terminLoeschen(id){
+  const t = termin(id);
+  state.termine = state.termine.filter(x => x.id !== id);
+  state.aufrufe = state.aufrufe.filter(a => a.terminId !== id);
+  loggen("Empfang: Termin (" + (t ? t.patient.initialen : "?") + ") gelöscht.", "Empfang");
+  modalSchliessen(); rendern();
+}
+
+/* ============================================================
+   MODAL · EINSTELLUNGEN (alles selbst anpassbar)
+   ============================================================ */
+function oeffneEinstellungen(){
+  const raeume = state.raeume.map(r =>
+    '<div class="einst-zeile"><input data-raum="' + r.id + '" value="' + esc(r.name) + '">' +
+    '<button class="btn klein gefahr" onclick="raumLoeschen(\'' + r.id + '\')">Entfernen</button></div>').join("");
+  const behandler = state.behandler.map(b =>
+    '<div class="einst-zeile"><input data-beh="' + b.id + '" value="' + esc(b.name) + '">' +
+    '<select data-behraum="' + b.id + '">' + state.raeume.map(r =>
+      '<option value="' + r.id + '"' + (b.raumHeute === r.id ? " selected" : "") + '>' + esc(r.name) + '</option>').join("") + '</select>' +
+    '<button class="btn klein gefahr" onclick="behandlerAusfall(\'' + b.id + '\')" title="Alle offenen Termine übertragen">krank →</button>' +
+    '<button class="btn klein gefahr" onclick="behandlerLoeschen(\'' + b.id + '\')">✕</button></div>').join("");
+
+  modalOeffnen('<h2>⚙ Einstellungen</h2>' +
+    '<div class="demo-hinweis"><b>Demo-Version:</b> Einstellungen wirken sofort in allen Ansichten, liegen aber nur im Arbeitsspeicher. Neuladen setzt alles zurück. Ein Login gibt es in dieser Demo bewusst nicht.</div>' +
+
+    '<div class="modal-block"><h3>Praxis</h3>' +
+    '<div class="feld-2"><div class="feld"><label>Name (Kopfzeile)</label><input id="e_name" value="' + esc(state.name) + '"></div>' +
+    '<div class="feld"><label>Untertitel</label><input id="e_unter" value="' + esc(state.unter) + '"></div></div></div>' +
+
+    '<div class="modal-block"><h3>Wartebereich-Anzeige</h3>' +
+    '<div class="feld-2"><div class="feld"><label>Anzeige zeigt</label><select id="e_modus">' +
+    '<option value="initialen"' + (state.anzeigeModus === "initialen" ? " selected" : "") + '>Initialen (z. B. „M. F.“)</option>' +
+    '<option value="nummer"' + (state.anzeigeModus === "nummer" ? " selected" : "") + '>Aufrufnummer (z. B. „Nr. A03“)</option></select></div>' +
+    '<div class="feld"><label>Status</label><select id="e_aktiv">' +
+    '<option value="1"' + (state.anzeigeAktiv ? " selected" : "") + '>eingeschaltet</option>' +
+    '<option value="0"' + (!state.anzeigeAktiv ? " selected" : "") + '>pausiert</option></select></div></div></div>' +
+
+    '<div class="modal-block"><h3>Regeln</h3>' +
+    '<div class="regel-zeile"><div class="rz-info"><div class="rz-name">„Nicht erschienen“ automatisch nach</div>' +
+    '<div class="rz-text">Minuten nach der Terminzeit ohne Check-in.</div></div>' +
+    '<input id="e_noshow" type="number" min="5" max="120" value="' + state.noShowMin + '"><span class="hinweis">Min.</span></div></div>' +
+
+    '<div class="modal-block"><h3>Räume <button class="btn klein" onclick="raumHinzufuegen()">＋ Raum</button></h3>' + raeume +
+    '<p class="hinweis">Räume mit offenen Terminen lassen sich nicht entfernen.</p></div>' +
+
+    '<div class="modal-block"><h3>Behandler <button class="btn klein" onclick="behandlerHinzufuegen()">＋ Behandler</button></h3>' + behandler +
+    '<p class="hinweis">„krank →“ überträgt alle offenen Termine auf eine andere Person.</p></div>' +
+
+    '<div class="modal-block"><h3>Datenschutz</h3>' +
+    '<p class="fliess" style="margin-bottom:10px">Abgeschlossene Termine lassen sich anonymisieren (Name → Initialen, Geburtsdatum entfernt); das Ereignis-Log ist datensparsam und löschbar.</p>' +
+    '<div class="aktionen"><button class="btn" onclick="anonymisieren()">Abgeschlossene Termine anonymisieren</button>' +
+    '<button class="btn" onclick="logLeeren()">Ereignis-Log löschen</button></div></div>' +
+
+    '<div class="modal-block"><h3>Demo</h3>' +
+    '<div class="aktionen"><button class="btn gefahr" onclick="demoZuruecksetzen()">↺ Demo zurücksetzen</button></div></div>' +
+
+    '<div class="modal-fuss"><button class="btn" onclick="modalSchliessen()">Abbrechen</button>' +
+    '<button class="btn primaer" onclick="einstellungenSpeichern()">Speichern</button></div>', true);
+}
+function einstellungenLesen(){
+  const w = $("#modalWurzel");
+  if (!w.querySelector("#e_name")) return;
+  state.name  = feldWert("e_name") || state.name;
+  state.unter = feldWert("e_unter") || state.unter;
+  state.anzeigeModus = document.getElementById("e_modus").value;
+  state.anzeigeAktiv = document.getElementById("e_aktiv").value === "1";
+  state.noShowMin = Math.max(5, feldZahl("e_noshow", state.noShowMin));
+  $$("[data-raum]", w).forEach(i => {
+    const r = state.raeume.find(r => r.id === i.getAttribute("data-raum"));
+    if (r) r.name = i.value.trim() || r.name;
+  });
+  $$("[data-beh]", w).forEach(i => {
+    const b = state.behandler.find(b => b.id === i.getAttribute("data-beh"));
+    if (b) b.name = i.value.trim() || b.name;
+  });
+  $$("[data-behraum]", w).forEach(s => {
+    const b = state.behandler.find(b => b.id === s.getAttribute("data-behraum"));
+    if (b) b.raumHeute = s.value;
+  });
+}
+function einstellungenSpeichern(){
+  einstellungenLesen();
+  document.getElementById("appName").textContent  = state.name;
+  document.getElementById("appUnter").textContent = state.unter;
+  loggen("Einstellungen gespeichert (Praxis, Anzeige, Regeln, Räume, Behandler).");
+  modalSchliessen(); rendern();
+}
+function raumHinzufuegen(){
+  einstellungenLesen();
+  state.raeume.push({ id:neueId("r"), name:"Raum " + (state.raeume.length + 1) });
+  loggen("Einstellungen: Raum hinzugefügt.");
+  oeffneEinstellungen();
+}
+function raumLoeschen(id){
+  einstellungenLesen();
+  if (state.termine.some(t => t.raumId === id && !["abgeschlossen","nichtErschienen"].includes(t.status))){
+    modalInfo("Nicht möglich", "Dieser Raum hat noch offene Termine. Bitte zuerst die Termine verschieben oder den Behandler-Ausfall nutzen.");
+    return;
+  }
+  if (state.raeume.length <= 1){ modalInfo("Nicht möglich", "Mindestens ein Raum muss bestehen bleiben."); return; }
+  state.raeume = state.raeume.filter(r => r.id !== id);
+  state.behandler.forEach(b => { if (b.raumHeute === id) b.raumHeute = state.raeume[0].id; });
+  if (state.aktiverRaum === id) state.aktiverRaum = state.raeume[0].id;
+  loggen("Einstellungen: Raum entfernt.");
+  oeffneEinstellungen();
+}
+function behandlerHinzufuegen(){
+  einstellungenLesen();
+  state.behandler.push({ id:neueId("b"), name:"Neuer Behandler", raumHeute:state.raeume[0] ? state.raeume[0].id : null });
+  loggen("Einstellungen: Behandler hinzugefügt.");
+  oeffneEinstellungen();
+}
+function behandlerLoeschen(id){
+  einstellungenLesen();
+  if (state.termine.some(t => t.behandlerId === id && !["abgeschlossen","nichtErschienen"].includes(t.status))){
+    modalInfo("Nicht möglich", "Dieser Behandler hat noch offene Termine. Bitte zuerst über „krank →“ übertragen.");
+    return;
+  }
+  if (state.behandler.length <= 1){ modalInfo("Nicht möglich", "Mindestens ein Behandler muss bestehen bleiben."); return; }
+  state.behandler = state.behandler.filter(b => b.id !== id);
+  loggen("Einstellungen: Behandler entfernt.");
+  oeffneEinstellungen();
+}
+function behandlerAusfall(id){
+  einstellungenLesen();
+  const b = state.behandler.find(b => b.id === id);
+  const ziele = state.behandler.filter(x => x.id !== id);
+  if (!ziele.length){ modalInfo("Nicht möglich", "Es gibt keinen anderen Behandler, auf den übertragen werden könnte."); return; }
+  modalOeffnen('<h2>Behandler-Ausfall: ' + esc(b.name) + '</h2>' +
+    '<p class="fliess" style="margin-bottom:12px">Alle noch offenen Termine (geplant / wartet) von ' + esc(b.name) + ' werden gesammelt übertragen an:</p>' +
+    '<div class="feld"><select id="a_ziel">' + ziele.map(z =>
+      '<option value="' + z.id + '">' + esc(z.name) + ' (' + esc(raumName(z.raumHeute)) + ')</option>').join("") + '</select></div>' +
+    '<div class="modal-fuss"><button class="btn" onclick="oeffneEinstellungen()">Zurück</button>' +
+    '<button class="btn primaer" onclick="ausfallAusfuehren(\'' + id + '\')">Termine übertragen</button></div>');
+}
+function ausfallAusfuehren(id){
+  const zielId = document.getElementById("a_ziel").value;
+  const ziel = state.behandler.find(b => b.id === zielId);
+  let n = 0;
+  state.termine.forEach(t => {
+    if (t.behandlerId === id && ["geplant","anwesend"].includes(t.status)){
+      t.behandlerId = zielId; t.raumId = ziel.raumHeute; n++;
+    }
+  });
+  loggen("Behandler-Ausfall: " + n + " offene Termine an " + ziel.name + " übertragen.");
+  modalSchliessen(); rendern();
+}
+
+/* ============================================================
+   MODAL · HILFE
+   ============================================================ */
+function oeffneHilfe(){
+  modalOeffnen('<h2>So funktioniert PraxisDesk</h2>' +
+    '<div class="demo-hinweis" style="margin-bottom:16px"><b>Demo-Version.</b> Alle Patienten, Termine und Rückmeldungen sind frei erfunden. Es gibt kein Login und keine Konten: Alle Ansichten sind über die Reiter oben frei zugänglich, damit sich alles ausprobieren lässt. Nichts wird gespeichert oder übertragen – Neuladen setzt die Demo zurück.</div>' +
+
+    '<div class="hilfe-block"><h3>Die Idee</h3><p>Patienten checken selbst ein, jeder Raum sieht seinen Tagesplan, der Empfang behält alles im Blick. Alle Ansichten teilen denselben Live-Zustand: Jede Änderung ist sofort überall sichtbar. Das Zeitband unter jeder laufenden Behandlung zeigt, wie weit sie ist – läuft sie über, färbt es sich rot.</p></div>' +
+
+    '<div class="hilfe-block"><h3>Die Ansichten (Reiter oben)</h3><ul>' +
+    '<li><b>Empfang:</b> alle Räume mit Verzögerungs-Ampel, alle Termine (Zeile antippen = bearbeiten), Notfall-Aufnahme, manueller Check-in, Sichtschutz für den Tresen.</li>' +
+    '<li><b>Check-in:</b> das Tablet im Eingang. Patient tippt seinen Namen an und bestätigt sein Geburtsdatum; nach 3 Fehlversuchen wird der Kiosk-Check-in gesperrt (Freigabe nur am Empfang). Hier geben Patienten auch Feedback ab.</li>' +
+    '<li><b>Behandlungsraum:</b> „Nächsten aufrufen“ schließt die laufende Behandlung ab und ruft den nächsten Eingecheckten auf – dringende Fälle werden vorgezogen.</li>' +
+    '<li><b>Wartebereich:</b> der öffentliche Bildschirm. Zeigt nie volle Namen, nur Initialen oder Aufrufnummern.</li>' +
+    '<li><b>Feedback:</b> alle Rückmeldungen mit Status offen → in Bearbeitung → erledigt.</li>' +
+    '<li><b>Auswertung:</b> Wartezeit, No-Show-Quote, Verzug, Auslastung je Raum – plus das Ereignis-Log.</li></ul></div>' +
+
+    '<div class="hilfe-block"><h3>Status & Ampel</h3><p>Ablauf: <b>geplant → wartet → in Behandlung → abgeschlossen</b>. ' + state.noShowMin + ' Minuten nach der Terminzeit ohne Check-in springt ein Termin automatisch auf „nicht erschienen“. Ampel je Raum: grün = im Plan, gelb = bis 15 Min Verzug, rot = mehr als 15 Min.</p></div>' +
+
+    '<div class="hilfe-block"><h3>⚙ Einstellungen</h3><p>Oben rechts: Praxisname, Anzeige-Modus (Initialen oder Nummer), Automatik-Frist, Räume und Behandler anlegen, umbenennen oder entfernen, Behandler-Ausfall („krank →“ überträgt alle offenen Termine) sowie die Datenschutz-Werkzeuge (Anonymisieren, Log löschen).</p></div>' +
+
+    '<div class="modal-fuss"><button class="btn primaer" onclick="modalSchliessen()">Alles klar</button></div>', true);
+}
+
+/* ============================================================
+   RENDERN & TAKT
+   ============================================================ */
+function beimWechsel(id){ if (id === "checkin") state.kiosk = { modus:"start" }; }
+function rendern(){
+  navBauen();
+  const app = $("#app");
+  if (state.ansicht === "empfang")         app.innerHTML = ansichtEmpfang();
+  else if (state.ansicht === "checkin")    app.innerHTML = ansichtKiosk();
+  else if (state.ansicht === "raum")       app.innerHTML = ansichtRaum();
+  else if (state.ansicht === "anzeige")    app.innerHTML = ansichtAnzeige();
+  else if (state.ansicht === "feedback")   app.innerHTML = ansichtFeedback();
+  else if (state.ansicht === "auswertung") app.innerHTML = ansichtAuswertung();
+  pulsAnwenden();
+}
+let taktZaehler = 0;
+function takt(){
+  taktZaehler++;
+  if (state.ansicht === "anzeige"){
+    const u = $(".az-uhr"); if (u) u.textContent = hhmm(Date.now());
+  }
+  if (taktZaehler % 30 !== 0) return;          // alle 30 Sekunden
+  const geaendert = autoNoShow();
+  if (geaendert || ["empfang","raum","auswertung"].includes(state.ansicht)) rendern();
+}
+
+/* ---------- Start ---------- */
+demoDaten();
+starten();
+
+</script>
+</body>
+</html>
